@@ -1,5 +1,22 @@
 local M = {}
 
+-- Get all lines from the table that match the specified pattern
+function M.get_lines_from_table(input_table, regex)
+	local matches = {}
+
+	-- Iterate through each line in the table
+	for _, line in ipairs(input_table) do
+		-- Check if the line matches the specified pattern
+		if line:match(regex) then
+			-- Add the line to the matches table
+			table.insert(matches, line)
+		end
+	end
+
+	return matches
+end
+
+-- Open a new buffer with the specified results
 function M.open_result_buffer(results)
 	-- Create a new buffer
 	local result_buffer = vim.api.nvim_create_buf(false, true)
@@ -13,26 +30,19 @@ function M.open_result_buffer(results)
 	-- Convert the string into a table of lines
 	local lines = vim.split(results, "\n")
 
-	-- Remove all lines except for the ones that contain the word "error"
-	local lines_with_errors = {}
-	for _, line in ipairs(lines) do
-		if string.find(line, "error") then
-			table.insert(lines_with_errors, line)
-		end
-	end
+	-- Get the lines containing errors
+	local lines_with_errors = M.get_lines_from_table(lines, "error")
 
 	-- Set the buffer's content
 	if #lines_with_errors > 0 then
 		vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines_with_errors)
 	else
 		-- get the lines containing the word PackageReference for package updated
-		local lines_with_package_updates = {}
-		for _, line in ipairs(lines) do
-			if string.find(line, "PackageReference for package") then
-				table.insert(lines_with_package_updates, line)
-			end
-		end
-		vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines)
+		local lines_with_package_reference = M.get_lines_from_table(
+			lines,
+			"PackageReference for package '[^']+' version '[^']+' updated in file '[^']+'"
+		)
+		vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines_with_package_reference)
 	end
 
 	-- Set the buffer to be unmodifiable
@@ -43,6 +53,24 @@ function M.open_result_buffer(results)
 
 	-- Set the buffer to read-only (optional)
 	vim.api.nvim_buf_set_option(result_buffer, "readonly", true)
+end
+
+-- get all projects in the solution
+function M.get_all_projects_in_solution()
+	-- run the dotnet command from the root of the project using solution file got get all available projects
+	local output = vim.fn.systemlist("dotnet sln list")
+	local projects = {}
+
+	-- do not add the first two lines to the list of projects
+	for _, project in ipairs(output) do
+		if project == "Project(s)" or project == "----------" then
+			goto continue
+		end
+		table.insert(projects, project)
+		::continue::
+	end
+
+	return projects
 end
 
 return M
