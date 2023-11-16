@@ -1,32 +1,5 @@
 local M = {}
 
--- Define a function to open a new buffer and print results
-function OpenResultBuffer(results)
-	-- Create a new buffer
-	local result_buffer = vim.api.nvim_create_buf(false, true)
-
-	-- Open the buffer in a new window
-	vim.api.nvim_command("split")
-
-	-- Set the buffer as the current buffer
-	vim.api.nvim_set_current_buf(result_buffer)
-
-	-- Convert the string into a table of lines
-	local lines = vim.split(results, "\n")
-
-	-- Set the buffer's content
-	vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines)
-
-	-- Set the buffer to be unmodifiable
-	vim.api.nvim_buf_set_option(result_buffer, "modifiable", false)
-
-	-- Set the buffer name (optional)
-	vim.api.nvim_buf_set_name(result_buffer, "ResultBuffer")
-
-	-- Set the buffer to read-only (optional)
-	vim.api.nvim_buf_set_option(result_buffer, "readonly", true)
-end
-
 function GetAllProjectsInSolution()
 	-- run the dotnet command from the root of the project using solution file got get all available projects
 	local output = vim.fn.systemlist("dotnet sln list")
@@ -81,7 +54,7 @@ function M.UpdatePackagesInProject()
 	end
 
 	-- print result of update in result buffer
-	OpenResultBuffer(resultOfNugetUpdate)
+	require("projektgunnar.utils").open_result_buffer(resultOfNugetUpdate)
 end
 
 vim.api.nvim_create_user_command("UpdatePackagesInProject", M.UpdatePackagesInProject, {})
