@@ -7,9 +7,9 @@ function M.add_packages_to_project()
 	local packageName = vim.fn.input("Package name: ")
 	print("\n")
 
-	-- ask user to select a project
 	local projects = utils.get_all_projects_in_solution()
 
+	-- ask user to select a project
 	local selectedIndexInProjectList = utils.get_selected_index_in_project_list(projects)
 
 	-- run the add nuget command for the selected package
@@ -24,7 +24,7 @@ function M.update_packages_in_solution()
 	local projects = utils.get_all_projects_in_solution()
 
 	-- ask user to select a project
-	local selectedIndexInProjectList = vim.fn.inputlist(projects)
+	local selectedIndexInProjectList = utils.get_selected_index_in_project_list(projects)
 
 	-- run the update nugets command for the selected package
 	local outdatedNugets = vim.fn.system(
