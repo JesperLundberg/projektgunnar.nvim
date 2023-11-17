@@ -2,6 +2,24 @@ local utils = require("projektgunnar.utils")
 
 local M = {}
 
+function M.add_packages_to_project()
+	-- ask user to input the name of the package
+	local packageName = vim.fn.input("Package name: ")
+	print("\n")
+
+	-- ask user to select a project
+	local projects = utils.get_all_projects_in_solution()
+
+	local selectedIndexInProjectList = utils.get_selected_index_in_project_list(projects)
+
+	-- run the add nuget command for the selected package
+	local resultOfNugetAdd =
+		vim.fn.system("dotnet add " .. projects[selectedIndexInProjectList] .. " package " .. packageName)
+
+	-- print result of add in result buffer
+	utils.open_result_buffer(resultOfNugetAdd)
+end
+
 function M.update_packages_in_solution()
 	local projects = utils.get_all_projects_in_solution()
 

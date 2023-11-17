@@ -1,5 +1,21 @@
 local M = {}
 
+-- Present the list of projects to the user and return the selected project
+function M.get_selected_index_in_project_list(projects)
+	local inputlist_choices = {}
+	for idx, choice in ipairs(projects) do
+		table.insert(inputlist_choices, tostring(idx) .. ". " .. choice)
+	end
+
+	-- Show the indexed list to the user using vim.fn.inputlist
+	local user_input = vim.fn.inputlist(inputlist_choices)
+
+	-- Extract the index from the user's input
+	local selected_index = tonumber(string.match(user_input, "^(%d+)"))
+
+	return selected_index
+end
+
 -- Get all lines from the table that match the specified pattern
 function M.get_lines_from_table(input_table, regex)
 	local matches = {}
@@ -38,10 +54,8 @@ function M.open_result_buffer(results)
 		vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines_with_errors)
 	else
 		-- get the lines containing the word PackageReference for package updated
-		local lines_with_package_reference = M.get_lines_from_table(
-			lines,
-			"PackageReference for package '[^']+' version '[^']+' updated in file '[^']+'"
-		)
+		local lines_with_package_reference =
+			M.get_lines_from_table(lines, "PackageReference for package '([^']+)' version '([^']+)'")
 		vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines_with_package_reference)
 	end
 
