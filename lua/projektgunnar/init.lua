@@ -3,6 +3,13 @@ local project_references = require("projektgunnar.project_references")
 
 local M = {}
 
+-- TODO: Enable this when the code is done
+-- vim.api.nvim_create_user_command(
+-- 	"AddProjectToSolution",
+-- 	project_references.add_project_to_solution,
+-- 	{ desc = "Add project to solution" }
+-- )
+
 vim.api.nvim_create_user_command(
 	"AddProjectReference",
 	project_references.add_project_reference,

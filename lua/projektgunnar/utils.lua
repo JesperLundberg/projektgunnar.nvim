@@ -33,7 +33,7 @@ function M.get_lines_from_table(input_table, regex)
 end
 
 -- Open a new buffer with the specified results
-function M.open_result_buffer(results)
+function M.open_result_buffer(results, output_regex_table)
 	-- Create a new buffer
 	local result_buffer = vim.api.nvim_create_buf(false, true)
 
@@ -47,15 +47,14 @@ function M.open_result_buffer(results)
 	local lines = vim.split(results, "\n")
 
 	-- Get the lines containing errors
-	local lines_with_errors = M.get_lines_from_table(lines, "error")
+	local lines_with_errors = M.get_lines_from_table(lines, output_regex_table.error)
 
 	-- Set the buffer's content
 	if #lines_with_errors > 0 then
 		vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines_with_errors)
 	else
 		-- get the lines containing the word PackageReference for package updated
-		local lines_with_package_reference =
-			M.get_lines_from_table(lines, "PackageReference for package '([^']+)' version '([^']+)'")
+		local lines_with_package_reference = M.get_lines_from_table(lines, output_regex_table.success)
 		vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines_with_package_reference)
 	end
 

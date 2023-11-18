@@ -12,12 +12,16 @@ function M.add_packages_to_project()
 	-- ask user to select a project
 	local selectedIndexInProjectList = utils.get_selected_index_in_project_list(projects)
 
-	-- run the add nuget command for the selected package
 	local resultOfNugetAdd =
 		vim.fn.system("dotnet add " .. projects[selectedIndexInProjectList] .. " package " .. packageName)
 
 	-- print result of add in result buffer
-	utils.open_result_buffer(resultOfNugetAdd)
+	-- run the add nuget command for the selected package
+	local output_regex = {
+		error = "error",
+		success = "PackageReference for package '([^']+)'",
+	}
+	utils.open_result_buffer(resultOfNugetAdd, output_regex)
 end
 
 function M.update_packages_in_solution()
@@ -56,8 +60,12 @@ function M.update_packages_in_solution()
 			vim.fn.system("dotnet add " .. projects[selectedIndexInProjectList] .. " package " .. outdatedNuget)
 	end
 
-	-- print result of update in result buffer
-	utils.open_result_buffer(resultOfNugetUpdate)
+	-- print result of update in result buffer-- run the add nuget command for the selected package
+	local output_regex = {
+		error = "error",
+		success = "PackageReference for package '([^']+)'",
+	}
+	utils.open_result_buffer(resultOfNugetUpdate, output_regex)
 end
 
 return M
