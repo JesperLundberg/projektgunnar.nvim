@@ -23,9 +23,15 @@ vim.api.nvim_create_user_command(
 )
 
 vim.api.nvim_create_user_command(
-	"UpdatePackagesInSolution",
-	nugets.update_packages_in_solution,
+	"UpdatePackagesInProject",
+	nugets.update_packages_in_project,
 	{ desc = "Update nugets in project" }
 )
+
+-- vim.api.nvim_create_user_command(
+-- 	"UpdatePackagesInSolution",
+-- 	nugets.update_packages_in_solution,
+-- 	{ desc = "Update nugets in solution" }
+-- )
 
 return M
