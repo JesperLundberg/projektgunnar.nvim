@@ -22,3 +22,11 @@ Using lazy package manager:
 ```lua
 "JesperLundberg/projektgunnar.nvim"
 ```
+
+#### TODO
+
+- [ ] Add project to solution
+- [ ] Make result show up in a floating buffer
+- [ ] Use some kind of picker to choose in the list of projects (telescope? mini.pick?)
+- [ ] Add some kind of progress buffer when updating all nugets
+- [ ] Make sure directory.packages.config works, also make sure it works without that file
