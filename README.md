@@ -41,3 +41,4 @@ Using lazy package manager:
 - [ ] Make sure directory.packages.config works, also make sure it works without that file
 - [ ] Make UpdatePackagesInSolution really update all packages in the solution
 - [ ] Make another command called UpdatePackagesInProject that updates all packages in the chosen project
+- [ ] Make the command ProjektGunnar and instead take e.g. AddProjectReference as input to avoid clogging up the commands
