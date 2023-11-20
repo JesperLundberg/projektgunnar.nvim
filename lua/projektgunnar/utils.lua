@@ -50,13 +50,10 @@ function M.open_result_buffer(results, output_regex_table)
 	local lines_with_errors = M.get_lines_from_table(lines, output_regex_table.error)
 
 	-- Set the buffer's content
-	if #lines_with_errors > 0 then
-		vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines_with_errors)
-	else
-		-- get the lines containing the word PackageReference for package updated
-		local lines_with_package_reference = M.get_lines_from_table(lines, output_regex_table.success)
-		vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines_with_package_reference)
-	end
+	-- get the lines containing the word PackageReference for package updated
+	local lines_with_package_reference =
+		M.concatenate_tables(M.get_lines_from_table(lines, output_regex_table.success), lines_with_errors)
+	vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines_with_package_reference)
 
 	-- Set the buffer to be unmodifiable
 	vim.api.nvim_buf_set_option(result_buffer, "modifiable", false)
@@ -84,6 +81,22 @@ function M.get_all_projects_in_solution()
 	end
 
 	return projects
+end
+
+-- function that concatenates tables, make sure that the tables are not nil
+function M.concatenate_tables(table1, table2)
+	local concatenated_table = {}
+	if table1 ~= nil then
+		for _, value in ipairs(table1) do
+			table.insert(concatenated_table, value)
+		end
+	end
+	if table2 ~= nil then
+		for _, value in ipairs(table2) do
+			table.insert(concatenated_table, value)
+		end
+	end
+	return concatenated_table
 end
 
 return M

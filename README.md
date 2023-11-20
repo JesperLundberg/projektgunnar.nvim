@@ -26,11 +26,11 @@ Using lazy package manager:
 
 #### Available commands
 
-| Command | Description |
-| --- | --- |
-| AddProjectReference | Adds a project reference of one project to another |
-| AddPackagesToProject | Add a nuget package to a project |
-| UpdatePackagesInSolution | Update all nuget packages in the chosen project |
+| Command                  | Description                                        |
+| ------------------------ | -------------------------------------------------- |
+| AddProjectReference      | Adds a project reference of one project to another |
+| AddPackagesToProject     | Add a nuget package to a project                   |
+| UpdatePackagesInSolution | Update all nuget packages in the chosen project    |
 
 #### TODO
 
@@ -40,5 +40,5 @@ Using lazy package manager:
 - [ ] Add some kind of progress buffer when updating all nugets
 - [ ] Make sure directory.packages.config works, also make sure it works without that file
 - [ ] Make UpdatePackagesInSolution really update all packages in the solution
-- [ ] Make another command called UpdatePackagesInProject that updates all packages in the chosen project
+- [x] Make another command called UpdatePackagesInProject that updates all packages in the chosen project
 - [ ] Make the command ProjektGunnar and instead take e.g. AddProjectReference as input to avoid clogging up the commands

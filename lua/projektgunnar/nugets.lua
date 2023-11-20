@@ -24,7 +24,7 @@ function M.add_packages_to_project()
 	utils.open_result_buffer(resultOfNugetAdd, output_regex)
 end
 
-function M.update_packages_in_solution()
+function M.update_packages_in_project()
 	local projects = utils.get_all_projects_in_solution()
 
 	-- ask user to select a project
