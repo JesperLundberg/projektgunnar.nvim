@@ -68,4 +68,53 @@ function M.update_packages_in_project()
 	utils.open_result_buffer(resultOfNugetUpdate, output_regex)
 end
 
+function M.update_packages_in_solution()
+	local projects = utils.get_all_projects_in_solution()
+
+	-- loop over projects and run the update nugets command for each project
+	-- and save the output in a table along with the project
+	local outdatedNugets = {}
+	for _, project in ipairs(projects) do
+		local outdatedNugetsForProject =
+			vim.fn.system("dotnet list " .. project .. " package --outdated  | awk '/>/{print $2}'")
+		if outdatedNugetsForProject ~= "" then
+			table.insert(outdatedNugets, { project = project, outdatedNugets = outdatedNugetsForProject })
+		end
+	end
+
+	-- print the output of the command, if it's empty, print that it is empty
+	if outdatedNugets == "" then
+		print("\nNo outdated nugets found")
+		return
+	end
+	print("\n" .. outdatedNugets)
+
+	-- run the update command for each outdated nugets
+	local resultOfNugetUpdate = {}
+
+	-- TODO: Here I stopped! Continue here!
+	-- TODO: I need to loop over all projects and update all nugets in each project
+	-- get the total number of outdated nugets from outdatedNugets
+	local totalNumberOfOutdatedNugets = 0
+	for _ in string.gmatch(outdatedNugets, "%S+") do
+		totalNumberOfOutdatedNugets = totalNumberOfOutdatedNugets + 1
+	end
+
+	-- update each nuget and print the progress
+	local currentNumberOfOutdatedNugets = 0
+	for outdatedNuget in string.gmatch(outdatedNugets, "%S+") do
+		currentNumberOfOutdatedNugets = currentNumberOfOutdatedNugets + 1
+		print("Updating nuget " .. currentNumberOfOutdatedNugets .. " of " .. totalNumberOfOutdatedNugets)
+		resultOfNugetUpdate =
+			vim.fn.system("dotnet add " .. projects[selectedIndexInProjectList] .. " package " .. outdatedNuget)
+	end
+
+	-- print result of update in result buffer-- run the add nuget command for the selected package
+	local output_regex = {
+		error = "error",
+		success = "PackageReference for package '([^']+)'",
+	}
+	utils.open_result_buffer(resultOfNugetUpdate, output_regex)
+end
+
 return M
