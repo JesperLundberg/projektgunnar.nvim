@@ -78,7 +78,7 @@ function M.update_packages_in_solution()
 		local outdatedNugetsForProject =
 			vim.fn.system("dotnet list " .. project .. " package --outdated  | awk '/>/{print $2}'")
 		if outdatedNugetsForProject ~= "" then
-			table.insert(outdatedNugets, { project = project, outdatedNugets = outdatedNugetsForProject })
+			table.insert(outdatedNugets, { project = project, outdated = outdatedNugetsForProject })
 		end
 	end
 
@@ -87,26 +87,38 @@ function M.update_packages_in_solution()
 		print("\nNo outdated nugets found")
 		return
 	end
-	print("\n" .. outdatedNugets)
 
-	-- run the update command for each outdated nugets
-	local resultOfNugetUpdate = {}
+	-- print each project and all nugets under that project, loop through the table
+	for _, outdatedNuget in ipairs(outdatedNugets) do
+		print("---\n")
+		print(outdatedNuget.project)
+		print("---\n")
+		print(outdatedNuget.outdated)
+	end
 
-	-- TODO: Here I stopped! Continue here!
-	-- TODO: I need to loop over all projects and update all nugets in each project
 	-- get the total number of outdated nugets from outdatedNugets
 	local totalNumberOfOutdatedNugets = 0
-	for _ in string.gmatch(outdatedNugets, "%S+") do
-		totalNumberOfOutdatedNugets = totalNumberOfOutdatedNugets + 1
+	-- loop through the list outdatedNugets and count the number of outdated nugets
+	for _, outdatedNuget in ipairs(outdatedNugets) do
+		for _ in string.gmatch(outdatedNuget.outdated, "%S+") do
+			totalNumberOfOutdatedNugets = totalNumberOfOutdatedNugets + 1
+		end
 	end
+
+	print(totalNumberOfOutdatedNugets)
 
 	-- update each nuget and print the progress
 	local currentNumberOfOutdatedNugets = 0
-	for outdatedNuget in string.gmatch(outdatedNugets, "%S+") do
-		currentNumberOfOutdatedNugets = currentNumberOfOutdatedNugets + 1
-		print("Updating nuget " .. currentNumberOfOutdatedNugets .. " of " .. totalNumberOfOutdatedNugets)
-		resultOfNugetUpdate =
-			vim.fn.system("dotnet add " .. projects[selectedIndexInProjectList] .. " package " .. outdatedNuget)
+	local resultOfNugetUpdate = ""
+
+	for _, outdatedNuget in ipairs(outdatedNugets) do
+		for nugetToUpdate in string.gmatch(outdatedNuget.outdated, "%S+") do
+			currentNumberOfOutdatedNugets = currentNumberOfOutdatedNugets + 1
+			print("Updating nuget " .. currentNumberOfOutdatedNugets .. " of " .. totalNumberOfOutdatedNugets)
+			-- run the update command for each outdated nugets and save the output in a string
+			resultOfNugetUpdate = resultOfNugetUpdate
+				.. vim.fn.system("dotnet add " .. outdatedNuget.project .. " package " .. nugetToUpdate)
+		end
 	end
 
 	-- print result of update in result buffer-- run the add nuget command for the selected package

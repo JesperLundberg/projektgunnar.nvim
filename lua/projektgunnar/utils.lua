@@ -50,9 +50,11 @@ function M.open_result_buffer(results, output_regex_table)
 	local lines_with_errors = M.get_lines_from_table(lines, output_regex_table.error)
 
 	-- Set the buffer's content
-	-- get the lines containing the word PackageReference for package updated
+	-- Add the lines with errors to the lines with successes
 	local lines_with_package_reference =
 		M.concatenate_tables(M.get_lines_from_table(lines, output_regex_table.success), lines_with_errors)
+
+	-- Set the buffer's content
 	vim.api.nvim_buf_set_lines(result_buffer, 0, -1, false, lines_with_package_reference)
 
 	-- Set the buffer to be unmodifiable
