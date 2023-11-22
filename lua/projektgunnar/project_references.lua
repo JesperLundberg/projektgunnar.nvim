@@ -23,14 +23,11 @@ function M.add_project_to_solution()
 	local projectToAdd = projects[selectedProjectIndex]
 
 	-- add reference to project
-	local resultOfNugetAdd = vim.fn.system("dotnet sln add " .. projectToAdd)
+	local resultOfProjectAdd = vim.fn.system("dotnet sln add " .. projectToAdd)
 
 	-- print result of add in result buffer
-	local output_regex = {
-		error = "error",
-		success = "Reference `([^`]+)` added",
-	}
-	utils.open_result_buffer(resultOfNugetAdd, output_regex)
+	utils.open_window()
+	utils.update_view(resultOfProjectAdd)
 end
 
 function M.add_project_reference()
@@ -51,16 +48,11 @@ function M.add_project_reference()
 	local projectToAdd = projects[selectedProjectIndex]
 
 	-- add reference to project
-	local resultOfNugetAdd = vim.fn.system("dotnet add " .. projectToAddTo .. " reference " .. projectToAdd)
+	local resultOfProjectAdd = vim.fn.system("dotnet add " .. projectToAddTo .. " reference " .. projectToAdd)
 
 	-- print result of add in result buffer
-
-	local output_regex = {
-		error = "error",
-		success = "Reference `([^`]+)` added to the project.",
-		-- success = "PackageReference for package '([^']+)' version '([^']+)'",
-	}
-	utils.open_result_buffer(resultOfNugetAdd, output_regex)
+	utils.open_window()
+	utils.update_view(resultOfProjectAdd)
 end
 
 return M
