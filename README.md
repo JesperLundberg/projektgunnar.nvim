@@ -37,8 +37,8 @@ Using lazy package manager:
 
 - [x] Make UpdatePackagesInSolution really update all packages in the solution
 - [x] Make another command called UpdatePackagesInProject that updates all packages in the chosen project
+- [x] Make result show up in a floating buffer
 - [ ] Add project to solution functionality
-- [ ] Make result show up in a floating buffer
 - [ ] Use some kind of picker to choose in the list of projects (telescope? mini.pick?)
 - [ ] Add some kind of progress buffer when updating all nugets
 - [ ] Make sure directory.packages.config works, also make sure it works without that file
