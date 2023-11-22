@@ -12,16 +12,13 @@ function M.add_packages_to_project()
 	-- ask user to select a project
 	local selectedIndexInProjectList = utils.get_selected_index_in_project_list(projects)
 
+	-- run the add nuget command for the selected package
 	local resultOfNugetAdd =
 		vim.fn.system("dotnet add " .. projects[selectedIndexInProjectList] .. " package " .. packageName)
 
 	-- print result of add in result buffer
-	-- run the add nuget command for the selected package
-	local output_regex = {
-		error = "error",
-		success = "PackageReference for package '([^']+)'",
-	}
-	utils.open_result_buffer(resultOfNugetAdd, output_regex)
+	utils.open_window()
+	utils.update_view(resultOfNugetAdd)
 end
 
 function M.update_packages_in_project()
@@ -60,12 +57,8 @@ function M.update_packages_in_project()
 			vim.fn.system("dotnet add " .. projects[selectedIndexInProjectList] .. " package " .. outdatedNuget)
 	end
 
-	-- print result of update in result buffer-- run the add nuget command for the selected package
-	local output_regex = {
-		error = "error",
-		success = "PackageReference for package '([^']+)'",
-	}
-	utils.open_result_buffer(resultOfNugetUpdate, output_regex)
+	utils.open_window()
+	utils.update_view(resultOfNugetUpdate)
 end
 
 function M.update_packages_in_solution()
@@ -121,12 +114,9 @@ function M.update_packages_in_solution()
 		end
 	end
 
-	-- print result of update in result buffer-- run the add nuget command for the selected package
-	local output_regex = {
-		error = "error",
-		success = "PackageReference for package '([^']+)'",
-	}
-	utils.open_result_buffer(resultOfNugetUpdate, output_regex)
+	-- print result of update in result buffer
+	utils.open_window()
+	utils.update_view(resultOfNugetUpdate)
 end
 
 return M
