@@ -56,7 +56,7 @@ function M.open_window()
 	api.nvim_win_set_option(win, "cursorline", true) -- it highlight line with the cursor on it
 
 	-- we can add title already here, because first line will never change
-	api.nvim_buf_set_lines(buf, 0, -1, false, { M.center("ProjektGunnar"), "", "" })
+	api.nvim_buf_set_lines(buf, 0, -1, false, { center("ProjektGunnar"), "", "" })
 	api.nvim_buf_add_highlight(buf, -1, "PGHeader", 0, 0, -1)
 end
 
@@ -84,7 +84,7 @@ function M.update_view(output)
 end
 
 -- Method to center a string in a window
-function M.center(str)
+function center(str)
 	local width = api.nvim_win_get_width(0)
 	local shift = math.floor(width / 2) - math.floor(string.len(str) / 2)
 	return string.rep(" ", shift) .. str
