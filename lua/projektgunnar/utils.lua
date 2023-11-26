@@ -1,17 +1,42 @@
 local M = {}
+local L = {}
 
 local api = vim.api
 local buf, win
 
+function M.set_mappings()
+	vim.api.nvim_buf_set_keymap(
+		buf,
+		"n",
+		"<cr>",
+		':lua require"projektgunnar.command_handling".run_command_under_cursor()<cr>',
+		{
+			nowait = true,
+			noremap = true,
+			silent = true,
+		}
+	)
+
+	-- local mappings = {
+	-- 	["<cr>"] = "run_command_under_cursor()",
+	-- }
+	--
+	-- for k, v in pairs(mappings) do
+	-- 	vim.api.nvim_buf_set_keymap(buf, "n", k, ':lua require"projektgunnar".' .. v .. "<cr>", {
+	-- 		nowait = true,
+	-- 		noremap = true,
+	-- 		silent = true,
+	-- 	})
+	-- end
+end
+
 -- Floating result buffer
 function M.open_window()
-	-- create a new scratch buffer
 	buf = api.nvim_create_buf(false, true)
-	-- create a new window for the border
 	local border_buf = api.nvim_create_buf(false, true)
 
 	api.nvim_buf_set_option(buf, "bufhidden", "wipe")
-	api.nvim_buf_set_option(buf, "filetype", "projektgunnar")
+	api.nvim_buf_set_option(buf, "filetype", "whid")
 
 	local width = api.nvim_get_option("columns")
 	local height = api.nvim_get_option("lines")
@@ -39,7 +64,6 @@ function M.open_window()
 		col = col,
 	}
 
-	-- Set the border symbols
 	local border_lines = { "╔" .. string.rep("═", win_width) .. "╗" }
 	local middle_line = "║" .. string.rep(" ", win_width) .. "║"
 	for _ = 1, win_height do
@@ -50,41 +74,38 @@ function M.open_window()
 
 	api.nvim_open_win(border_buf, true, border_opts)
 	win = api.nvim_open_win(buf, true, opts)
-	-- if the buffer is closed, close the border buffer as well
 	api.nvim_command('au BufWipeout <buffer> exe "silent bwipeout! "' .. border_buf)
 
 	api.nvim_win_set_option(win, "cursorline", true) -- it highlight line with the cursor on it
 
 	-- we can add title already here, because first line will never change
-	api.nvim_buf_set_lines(buf, 0, -1, false, { center("ProjektGunnar"), "", "" })
-	api.nvim_buf_add_highlight(buf, -1, "PGHeader", 0, 0, -1)
+	api.nvim_buf_set_lines(buf, 0, -1, false, { L.center("ProjektGunnar"), "", "" })
+	-- set the header highlight
+	api.nvim_buf_add_highlight(buf, -1, "WhidHeader", 0, 0, -1)
 end
 
 -- Method to set the content of the window
-function M.update_view(output)
+function M.update_view(command)
 	api.nvim_buf_set_option(buf, "modifiable", true)
 
 	-- if the output is a string, convert it to a table
-	if type(output) == "string" then
-		output = vim.split(output, "\n")
-	end
+	-- local result = vim.fn.systemlist(command)
 
-	if #output == 0 then
-		table.insert(output, "")
+	if #command == 0 then
+		table.insert(command, "")
 	end -- add  an empty line to preserve layout if there is no results
-	for k, _ in pairs(output) do
-		output[k] = "  " .. output[k]
+	for k, _ in pairs(command) do
+		command[k] = "  " .. command[k]
 	end
 
-	api.nvim_buf_set_lines(buf, 3, -1, false, output)
+	api.nvim_buf_set_lines(buf, 3, -1, false, command)
 
-	print("before highlight")
-	api.nvim_buf_add_highlight(buf, -1, "PGHeader", 1, 0, -1)
 	api.nvim_buf_set_option(buf, "modifiable", false)
+	api.nvim_win_set_cursor(win, { 4, 0 })
 end
 
 -- Method to center a string in a window
-function center(str)
+function L.center(str)
 	local width = api.nvim_win_get_width(0)
 	local shift = math.floor(width / 2) - math.floor(string.len(str) / 2)
 	return string.rep(" ", shift) .. str

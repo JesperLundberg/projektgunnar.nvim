@@ -5,7 +5,6 @@ local M = {}
 function M.add_packages_to_project()
 	-- ask user to input the name of the package
 	local packageName = vim.fn.input("Package name: ")
-	print("\n")
 
 	local projects = utils.get_all_projects_in_solution()
 
@@ -22,6 +21,9 @@ function M.add_packages_to_project()
 end
 
 function M.update_packages_in_project()
+	utils.open_window()
+	utils.update_view("Updating packages in project")
+
 	local projects = utils.get_all_projects_in_solution()
 
 	-- ask user to select a project
@@ -34,10 +36,10 @@ function M.update_packages_in_project()
 
 	-- print the output of the command, if it's empty, print that it is empty
 	if outdatedNugets == "" then
-		print("\nNo outdated nugets found")
+		utils.update_view("No outdated nugets found")
 		return
 	end
-	print("\n" .. outdatedNugets)
+	utils.update_view(outdatedNugets)
 
 	-- run the update command for each outdated nugets
 	local resultOfNugetUpdate = {}
@@ -52,12 +54,12 @@ function M.update_packages_in_project()
 	local currentNumberOfOutdatedNugets = 0
 	for outdatedNuget in string.gmatch(outdatedNugets, "%S+") do
 		currentNumberOfOutdatedNugets = currentNumberOfOutdatedNugets + 1
-		print("Updating nuget " .. currentNumberOfOutdatedNugets .. " of " .. totalNumberOfOutdatedNugets)
+		utils.update_view("Updating nuget " .. currentNumberOfOutdatedNugets .. " of " .. totalNumberOfOutdatedNugets)
 		resultOfNugetUpdate =
 			vim.fn.system("dotnet add " .. projects[selectedIndexInProjectList] .. " package " .. outdatedNuget)
 	end
 
-	utils.open_window()
+	-- print result of update in result buffer
 	utils.update_view(resultOfNugetUpdate)
 end
 
