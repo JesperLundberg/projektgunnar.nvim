@@ -89,7 +89,9 @@ function M.update_view(command)
 	api.nvim_buf_set_option(buf, "modifiable", true)
 
 	-- if the output is a string, convert it to a table
-	-- local result = vim.fn.systemlist(command)
+	if type(command) == "string" then
+		command = vim.split(command, "\n")
+	end
 
 	if #command == 0 then
 		table.insert(command, "")
@@ -109,6 +111,21 @@ function L.center(str)
 	local width = api.nvim_win_get_width(0)
 	local shift = math.floor(width / 2) - math.floor(string.len(str) / 2)
 	return string.rep(" ", shift) .. str
+end
+
+-- Method to get the length of a table
+function M.table_length(table)
+	-- if table is nil, return 0
+	if table == nil then
+		print("table is nil")
+		return 0
+	end
+
+	local count = 0
+	for _ in pairs(table) do
+		count = count + 1
+	end
+	return count
 end
 
 -- Method to close the window
@@ -187,16 +204,9 @@ end
 function M.get_all_projects_in_solution()
 	-- run the dotnet command from the root of the project using solution file got get all available projects
 	local output = vim.fn.systemlist("dotnet sln list")
-	local projects = {}
 
-	-- do not add the first two lines to the list of projects
-	for _, project in ipairs(output) do
-		if project == "Project(s)" or project == "----------" then
-			goto continue
-		end
-		table.insert(projects, project)
-		::continue::
-	end
+	-- remove the first two lines from the output
+	local projects = vim.list_slice(output, 3, #output)
 
 	return projects
 end
