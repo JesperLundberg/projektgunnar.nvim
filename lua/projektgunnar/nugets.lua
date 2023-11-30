@@ -1,4 +1,5 @@
 local utils = require("projektgunnar.utils")
+local run_commands = require("projektgunnar.run_dotnet_async")
 
 local M = {}
 
@@ -35,24 +36,18 @@ function M.update_packages_in_project(project, outdatedNugets)
 		return
 	end
 	utils.update_view(outdatedNugets)
-
-	-- run the update command for each outdated nugets
-	local resultOfNugetUpdate = {}
+	print(outdatedNugets)
+	print("Before coroutine")
 
 	-- update each nuget in outdatedNugets table and print the progress
-	local currentNumberOfOutdatedNugets = 0
 	for _, nugetToUpdate in ipairs(outdatedNugets) do
-		currentNumberOfOutdatedNugets = currentNumberOfOutdatedNugets + 1
-		utils.update_view("Updating nuget " .. currentNumberOfOutdatedNugets .. " of " .. outdatedNugetsCount)
-		-- run the update command for each outdated nugets and save the output in a string
-		resultOfNugetUpdate = utils.concatenate_tables(
-			resultOfNugetUpdate,
-			vim.fn.systemlist("dotnet add " .. project .. " package " .. nugetToUpdate)
-		)
+		run_commands.start_coroutine(outdatedNugetsCount, { project, "package", nugetToUpdate })
 	end
 
+	print("After coroutine")
+
 	-- print result of update in result buffer
-	utils.update_view(resultOfNugetUpdate)
+	utils.update_view(run_commands.result)
 end
 
 -- function M.update_packages_in_solution()
