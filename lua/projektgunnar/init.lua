@@ -1,37 +1,40 @@
-local nugets = require("projektgunnar.nugets")
-local project_references = require("projektgunnar.project_references")
+local main = require("projektgunnar.main")
 
 local M = {}
+local L = {}
 
--- TODO: Enable this when the code is done
--- vim.api.nvim_create_user_command(
--- 	"AddProjectToSolution",
--- 	project_references.add_project_to_solution,
--- 	{ desc = "Add project to solution" }
--- )
+function L.get_all_projects_in_solution()
+	-- run the dotnet command from the root of the project using solution file got get all available projects
+	local output = vim.fn.systemlist("dotnet sln list")
+
+	-- remove the first two lines from the output
+	local projects = vim.list_slice(output, 3, #output)
+
+	return projects
+end
+
+function L.outdated_nugets(project)
+	-- run the outdated nugets command for the selected project
+	local outdated_nugets = vim.fn.systemlist("dotnet list " .. project .. " package --outdated  | awk '/>/{print $2}'")
+
+	return outdated_nugets
+end
+
+function L.UpdateNugetsInProject()
+	-- get all projects in the solution
+	local projects = L.get_all_projects_in_solution()
+	local projectToUpdate = projects[vim.fn.inputlist(projects)]
+
+	-- get all outdated nugets for the selected project
+	local outdated_nugets = L.outdated_nugets(projectToUpdate)
+
+	main.UpdateNugetsInProject(projectToUpdate, outdated_nugets)
+end
 
 vim.api.nvim_create_user_command(
-	"AddProjectReference",
-	project_references.add_project_reference,
-	{ desc = "Add project reference" }
-)
-
-vim.api.nvim_create_user_command(
-	"AddPackagesToProject",
-	nugets.add_packages_to_project,
-	{ desc = "Add nuget to project" }
-)
-
-vim.api.nvim_create_user_command(
-	"UpdatePackagesInProject",
-	nugets.update_packages_in_project,
-	{ desc = "Update nugets in project" }
-)
-
-vim.api.nvim_create_user_command(
-	"UpdatePackagesInSolution",
-	nugets.update_packages_in_solution,
-	{ desc = "Update nugets in solution" }
+	"UpdateNugetsInProject",
+	L.UpdateNugetsInProject,
+	{ desc = "Update Nugets in Project" }
 )
 
 return M
