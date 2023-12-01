@@ -1,5 +1,6 @@
 local main = require("projektgunnar.main")
 local utils = require("projektgunnar.utils")
+local nugets = require("projektgunnar.nugets")
 
 local L = {}
 
@@ -9,7 +10,7 @@ function L.UpdateNugetsInProject()
 	local projectToUpdate = projects[vim.fn.inputlist(projects)]
 
 	-- get all outdated nugets for the selected project
-	local outdated_nugets = utils.outdated_nugets(projectToUpdate)
+	local outdated_nugets = nugets.outdated_nugets(projectToUpdate)
 
 	main.UpdateNugetsInProject(projectToUpdate, outdated_nugets)
 end
