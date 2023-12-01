@@ -16,14 +16,14 @@ local function reset_and_cleanup()
 end
 
 -- Coroutine function to perform asynchronous task
-local function create_async_task(project_path, nuget_list, win, buf)
+local function create_async_task(dotnet_command_arguments, table_of_items_to_add, win, buf)
 	return coroutine.create(function()
-		local total_nugets = #nuget_list
+		local total_nugets = #table_of_items_to_add
 
 		-- Loop through all nugets and update them
-		for i, nuget in ipairs(nuget_list) do
+		for i, item_to_add in ipairs(table_of_items_to_add) do
 			-- Construct the dotnet command
-			local dotnet_command = "dotnet add " .. project_path .. " package " .. nuget
+			local dotnet_command = "dotnet " .. dotnet_command_arguments .. item_to_add
 
 			-- Initialize success
 			local success = false
@@ -65,7 +65,7 @@ function M.AddOrUpdateNugetsInProject(project_path, nuget_table)
 	reset_and_cleanup()
 
 	-- Create a new coroutine for the current run
-	async_task = create_async_task(project_path, nuget_table, win, buf)
+	async_task = create_async_task("add " .. project_path .. " package ", nuget_table, win, buf)
 
 	-- Start the coroutine with the floating window handles
 	coroutine.resume(async_task, win, buf)

@@ -8,16 +8,16 @@ local function AddNugetToProject()
 
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local projectToUpdate = projects[vim.fn.inputlist(projects)]
+	local projectToAddNugetTo = utils.ask_user_for_project(projects)
 
 	-- update nugets in project
-	main.AddOrUpdateNugetsInProject(projectToUpdate, { nugetToAdd })
+	main.AddOrUpdateNugetsInProject(projectToAddNugetTo, { nugetToAdd })
 end
 
 local function UpdateNugetsInProject()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local projectToUpdate = projects[vim.fn.inputlist(projects)]
+	local projectToUpdate = utils.ask_user_for_project(projects)
 
 	-- get all outdated nugets for the selected project
 	local outdated_nugets = nugets.outdated_nugets(projectToUpdate)
