@@ -1,4 +1,5 @@
 local floating_window = require("projektgunnar.floating_window")
+
 local M = {}
 
 local async_task
@@ -53,10 +54,10 @@ local function create_async_task(project_path, nuget_list, win, buf)
 	end)
 end
 
--- Function to update nugets in project
+-- Function to add or update nugets in/to project
 -- @param project_path string
 -- @param nuget_list table
-function M.UpdateNugetsInProject(project_path, nuget_list)
+function M.AddOrUpdateNugetsInProject(project_path, nuget_table)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
 
@@ -64,7 +65,7 @@ function M.UpdateNugetsInProject(project_path, nuget_list)
 	reset_and_cleanup()
 
 	-- Create a new coroutine for the current run
-	async_task = create_async_task(project_path, nuget_list, win, buf)
+	async_task = create_async_task(project_path, nuget_table, win, buf)
 
 	-- Start the coroutine with the floating window handles
 	coroutine.resume(async_task, win, buf)
