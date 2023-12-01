@@ -4,12 +4,13 @@ local M = {}
 local async_task
 
 -- Function to reset and clean up after each run
-function M.reset_and_cleanup()
+local function reset_and_cleanup()
 	-- Stop the coroutine if it's running
 	if async_task and coroutine.status(async_task) == "running" then
 		coroutine.yield()
 	end
 
+	-- Reset the async task
 	async_task = nil
 end
 
@@ -18,6 +19,7 @@ local function create_async_task(project_path, nuget_list, win, buf)
 	return coroutine.create(function()
 		local total_nugets = #nuget_list
 
+		-- Loop through all nugets and update them
 		for i, nuget in ipairs(nuget_list) do
 			-- Construct the dotnet command
 			local dotnet_command = "dotnet add " .. project_path .. " package " .. nuget
@@ -51,12 +53,15 @@ local function create_async_task(project_path, nuget_list, win, buf)
 	end)
 end
 
+-- Function to update nugets in project
+-- @param project_path string
+-- @param nuget_list table
 function M.UpdateNugetsInProject(project_path, nuget_list)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
 
 	-- Reset and cleanup from previous run
-	M.reset_and_cleanup()
+	reset_and_cleanup()
 
 	-- Create a new coroutine for the current run
 	async_task = create_async_task(project_path, nuget_list, win, buf)
