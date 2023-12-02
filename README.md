@@ -26,21 +26,22 @@ Using lazy package manager:
 
 #### Available commands
 
-| Command                 | Description                                     |
-| ----------------------- | ----------------------------------------------- |
-| AddPackagesToProject    | Add a nuget package to a project                |
-| UpdatePackagesInProject | Update all nuget packages in the chosen project |
+| Command               | Description                                     |
+| --------------------- | ----------------------------------------------- |
+| AddNugetToProject     | Add a nuget package to a project                |
+| UpdateNugetsInProject | Update all nuget packages in the chosen project |
+| AddProjectToProject   | Add a project as reference in another           |
 
 #### TODO
 
 - [x] Make another command called UpdatePackagesInProject that updates all packages in the chosen project
 - [x] Make result show up in a floating window
 - [x] Add some kind of progress buffer when updating all nugets
+- [x] Add project to project functionality
 - [ ] Add project to solution functionality
-- [ ] Add project to project functionality
 - [ ] Use some kind of picker to choose in the list of projects (telescope? mini.pick?)
 - [ ] Make sure directory.packages.config works, also make sure it works without that file
-- [ ] Make the command ProjektGunnar and instead take e.g. AddProjectReference as input to avoid clogging up the commands
+- [ ] Make sure errors are handled gracefully
 
 #### Credits
 
