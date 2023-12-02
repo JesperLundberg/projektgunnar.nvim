@@ -1,37 +1,62 @@
+local main = require("projektgunnar.main")
+local utils = require("projektgunnar.utils")
 local nugets = require("projektgunnar.nugets")
-local project_references = require("projektgunnar.project_references")
 
-local M = {}
+-- add nuget to project
+local function AddNugetToProject()
+	-- ask user for nuget to add
+	local nugetToAdd = vim.fn.input("Nuget to add: ")
 
--- TODO: Enable this when the code is done
--- vim.api.nvim_create_user_command(
--- 	"AddProjectToSolution",
--- 	project_references.add_project_to_solution,
--- 	{ desc = "Add project to solution" }
--- )
+	-- get all projects in the solution
+	local projects = utils.get_all_projects_in_solution()
+	local projectToAddNugetTo = utils.ask_user_for_project(projects)
 
+	-- add nuget to project
+	main.AddOrUpdateNugetsInProject(projectToAddNugetTo, { nugetToAdd })
+end
+
+-- update nugets in project
+local function UpdateNugetsInProject()
+	-- get all projects in the solution
+	local projects = utils.get_all_projects_in_solution()
+	local projectToUpdate = utils.ask_user_for_project(projects)
+
+	-- get all outdated nugets for the selected project
+	local outdated_nugets = nugets.outdated_nugets(projectToUpdate)
+
+	-- update nugets in project
+	main.AddOrUpdateNugetsInProject(projectToUpdate, outdated_nugets)
+end
+
+-- add project to project
+local function AddProjectToProject()
+	vim.api.nvim_out_write("Select project\n")
+
+	-- get all projects in the solution
+	local projects = utils.get_all_projects_in_solution()
+	local projectToAddTo = utils.ask_user_for_project(projects)
+
+	-- remove the project we are adding to from the list of projects to add
+	for i, v in ipairs(projects) do
+		if v == projectToAddTo then
+			table.remove(projects, i)
+			break
+		end
+	end
+
+	vim.api.nvim_out_write("\nSelect project to add to " .. projectToAddTo .. "\n")
+
+	-- get all projects in the solution
+	local projectToAdd = utils.ask_user_for_project(projects)
+
+	-- add project to project
+	main.AddProjectToProject(projectToAddTo, projectToAdd)
+end
+
+vim.api.nvim_create_user_command("AddNugetToProject", AddNugetToProject, { desc = "Add Nuget to Project" })
+vim.api.nvim_create_user_command("UpdateNugetsInProject", UpdateNugetsInProject, { desc = "Update Nugets in Project" })
 vim.api.nvim_create_user_command(
-	"AddProjectReference",
-	project_references.add_project_reference,
-	{ desc = "Add project reference" }
+	"AddProjectToProject",
+	AddProjectToProject,
+	{ desc = "Add one project as a reference to another" }
 )
-
-vim.api.nvim_create_user_command(
-	"AddPackagesToProject",
-	nugets.add_packages_to_project,
-	{ desc = "Add nuget to project" }
-)
-
-vim.api.nvim_create_user_command(
-	"UpdatePackagesInProject",
-	nugets.update_packages_in_project,
-	{ desc = "Update nugets in project" }
-)
-
-vim.api.nvim_create_user_command(
-	"UpdatePackagesInSolution",
-	nugets.update_packages_in_solution,
-	{ desc = "Update nugets in solution" }
-)
-
-return M

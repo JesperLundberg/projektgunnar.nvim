@@ -5,7 +5,7 @@ Gunnar is the nice old man who helps you add projects or packages to dotnet solu
 #### Why?
 
 > [!NOTE]
-> This is a work in progress and while it is almost feature complete it is far from done. I have more ideas on what I want to add but first and foremost I need to make it look good. Right now it is very bare bones on the UI side.
+> This is a work in progress.
 
 Everytime I wanted to add nugets, references to other projects or add a project to the solution I had to spend some time getting the dotnet commands right. It started to annoy me and so the idea of a plugin was born. This is a plugin that helps with those commands and allows you to run them from inside neovim without using a terminal.
 
@@ -26,20 +26,25 @@ Using lazy package manager:
 
 #### Available commands
 
-| Command                  | Description                                        |
-| ------------------------ | -------------------------------------------------- |
-| AddProjectReference      | Adds a project reference of one project to another |
-| AddPackagesToProject     | Add a nuget package to a project                   |
-| UpdatePackagesInProject  | Update all nuget packages in the chosen project    |
-| UpdatePackagesInSolution | Update all nuget packages in the solution          |
+| Command               | Description                                     |
+| --------------------- | ----------------------------------------------- |
+| AddNugetToProject     | Add a nuget package to a project                |
+| UpdateNugetsInProject | Update all nuget packages in the chosen project |
+| AddProjectToProject   | Add a project as reference in another           |
 
 #### TODO
 
-- [x] Make UpdatePackagesInSolution really update all packages in the solution
 - [x] Make another command called UpdatePackagesInProject that updates all packages in the chosen project
-- [x] Make result show up in a floating buffer
+- [x] Make result show up in a floating window
+- [x] Add some kind of progress buffer when updating all nugets
+- [x] Add project to project functionality
 - [ ] Add project to solution functionality
 - [ ] Use some kind of picker to choose in the list of projects (telescope? mini.pick?)
-- [ ] Add some kind of progress buffer when updating all nugets
 - [ ] Make sure directory.packages.config works, also make sure it works without that file
-- [ ] Make the command ProjektGunnar and instead take e.g. AddProjectReference as input to avoid clogging up the commands
+- [ ] Make sure errors are handled gracefully
+
+#### Credits
+
+[Issafalcon](https://github.com/Issafalcon/) - for being patient with questions and giving me clues on what to look into.
+
+ChatGPT - for helping me with understand the coroute.
