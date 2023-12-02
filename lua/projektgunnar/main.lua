@@ -71,4 +71,18 @@ function M.AddOrUpdateNugetsInProject(project_path, nuget_table)
 	coroutine.resume(async_task, win, buf)
 end
 
+function M.AddProjectToProject(project_path, project_to_add_path)
+	-- Open a floating window and get handles
+	local win, buf = floating_window.open()
+
+	-- Reset and cleanup from previous run
+	reset_and_cleanup()
+
+	-- Create a new coroutine for the current run
+	async_task = create_async_task("add " .. project_path .. " reference ", { project_to_add_path }, win, buf)
+
+	-- Start the coroutine with the floating window handles
+	coroutine.resume(async_task, win, buf)
+end
+
 return M
