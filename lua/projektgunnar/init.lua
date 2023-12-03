@@ -1,6 +1,9 @@
 local main = require("projektgunnar.main")
 local utils = require("projektgunnar.utils")
 local nugets = require("projektgunnar.nugets")
+local picker = require("mini.pick")
+
+local L = {}
 
 -- add nuget to project
 local function AddNugetToProject()
@@ -19,13 +22,19 @@ end
 local function UpdateNugetsInProject()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local projectToUpdate = utils.ask_user_for_project(projects)
+	-- local projectToUpdate = utils.ask_user_for_project(projects)
+	picker.ui_select(projects, {}, function(choice)
+		L.choice = choice
+		return choice
+	end)
+
+	vim.api.nvim_out_write("Selected outside: " .. L.choice .. "\n")
 
 	-- get all outdated nugets for the selected project
-	local outdated_nugets = nugets.outdated_nugets(projectToUpdate)
+	local outdated_nugets = nugets.outdated_nugets(L.choice)
 
 	-- update nugets in project
-	main.AddOrUpdateNugetsInProject(projectToUpdate, outdated_nugets)
+	main.AddOrUpdateNugetsInProject(L.choice, outdated_nugets)
 end
 
 -- add project to project
