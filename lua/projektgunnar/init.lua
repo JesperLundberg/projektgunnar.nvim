@@ -10,31 +10,31 @@ local function AddNugetToProject()
 
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	picker.AskUserForProject(projects) -- TODO: Hack!
+	local choice = picker.AskUserForProject(projects)
 
 	-- add nuget to project
-	main.AddOrUpdateNugetsInProject(picker.choice, { nugetToAdd })
+	main.AddOrUpdateNugetsInProject(choice, { nugetToAdd })
 end
 
 -- update nugets in project
 local function UpdateNugetsInProject()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	picker.AskUserForProject(projects) -- TODO: Hack!
+	local choice = picker.AskUserForProject(projects)
 
 	-- get all outdated nugets for the selected project
-	local outdated_nugets = nugets.outdated_nugets(picker.choice)
+	local outdated_nugets = nugets.outdated_nugets(choice)
 
 	-- update nugets in project
-	main.AddOrUpdateNugetsInProject(picker.choice, outdated_nugets)
+	main.AddOrUpdateNugetsInProject(choice, outdated_nugets)
 end
 
 -- add project to project
 local function AddProjectToProject()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	picker.AskUserForProject(projects) -- TODO: Hack!
-	local projectToAddTo = picker.choice
+	local choice = picker.AskUserForProject(projects)
+	local projectToAddTo = choice
 
 	-- remove the project we are adding to from the list of projects to add
 	for i, v in ipairs(projects) do
@@ -45,10 +45,10 @@ local function AddProjectToProject()
 	end
 
 	-- ask user for project to add
-	picker.AskUserForProject(projects) -- TODO: Hack!
+	choice = picker.AskUserForProject(projects)
 
 	-- add project to project
-	main.AddProjectToProject(projectToAddTo, picker.choice)
+	main.AddProjectToProject(projectToAddTo, choice)
 end
 
 vim.api.nvim_create_user_command("AddNugetToProject", AddNugetToProject, { desc = "Add Nuget to Project" })
