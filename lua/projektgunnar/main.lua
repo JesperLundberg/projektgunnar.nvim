@@ -61,6 +61,15 @@ function M.AddOrUpdateNugetsInProject(project_path, nuget_table)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
 
+	-- if there are no outdated nugets, notify the user and return
+	if #nuget_table == 0 then
+		floating_window.print_message(win, buf, "No outdated nugets in project " .. project_path)
+		return
+	end
+
+	-- Notify the user that the command will add or update nugets
+	floating_window.print_message(win, buf, "Adding or updating nugets in project " .. project_path)
+
 	-- Reset and cleanup from previous run
 	reset_and_cleanup()
 
@@ -74,6 +83,9 @@ end
 function M.AddProjectToProject(project_path, project_to_add_path)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
+
+	-- Notify the user that the command will add project to project
+	floating_window.print_message(win, buf, "Adding project " .. project_to_add_path .. " to project " .. project_path)
 
 	-- Reset and cleanup from previous run
 	reset_and_cleanup()

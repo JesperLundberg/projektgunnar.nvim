@@ -21,7 +21,10 @@ For Arch Linux the command is `pacman -S dotnet-sdk`.
 Using lazy package manager:
 
 ```lua
-"JesperLundberg/projektgunnar.nvim"
+"JesperLundberg/projektgunnar.nvim",
+dependencies = {
+    "echasnovski/mini.pick",
+},
 ```
 
 #### Available commands
@@ -38,9 +41,9 @@ Using lazy package manager:
 - [x] Make result show up in a floating window
 - [x] Add some kind of progress buffer when updating all nugets
 - [x] Add project to project functionality
+- [x] Use some kind of picker to choose in the list of projects (telescope? mini.pick?)
+- [x] Make sure directory.packages.config works, also make sure it works without that file
 - [ ] Add project to solution functionality
-- [ ] Use some kind of picker to choose in the list of projects (telescope? mini.pick?)
-- [ ] Make sure directory.packages.config works, also make sure it works without that file
 - [ ] Make sure errors are handled gracefully
 
 #### Credits

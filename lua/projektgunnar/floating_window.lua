@@ -72,6 +72,27 @@ function M.open()
 	return win, buf -- Return window and buffer handles
 end
 
+-- Method to print what command will be run
+-- @param win window handle
+-- @param buf buffer handle
+-- @param message string
+function M.print_message(win, buf, message)
+	-- Make the buffer modifiable
+	api.nvim_buf_set_option(buf, "modifiable", true)
+
+	-- Add delimiter under the message
+	message = { message, "----------------------------------------" }
+
+	-- Set the message
+	api.nvim_buf_set_lines(buf, 0, -1, false, message)
+
+	-- Make the buffer unmodifiable
+	api.nvim_buf_set_option(buf, "modifiable", false)
+
+	-- Set the cursor to the last line
+	api.nvim_win_set_cursor(win, { #message, 0 })
+end
+
 -- Method to set the content of the window
 -- @param win window handle
 -- @param buf buffer handle
@@ -86,24 +107,25 @@ function M.update(win, buf, index, total, success, command_output)
 	-- Get the current lines in the buffer
 	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
 
-	-- Append the new lines
 	local status_message = success and "Success" or "Failed"
 	local new_lines = {
 		tostring(index) .. " out of " .. tostring(total),
-		"Status: " .. status_message, -- Highlight failed lines
+		"Status: " .. status_message, -- TODO: Highlight failed lines
 		"Command: " .. command_output,
 		"----------------------------------------",
 	}
-	local updated_lines = vim.list_extend(current_lines, new_lines)
+
+	-- Add the new lines to the current lines
+	local lines_to_write = vim.list_extend(current_lines, new_lines)
 
 	-- Set the updated lines
-	api.nvim_buf_set_lines(buf, 0, -1, false, updated_lines)
+	api.nvim_buf_set_lines(buf, 0, -1, false, lines_to_write)
 
 	-- Make the buffer unmodifiable
 	api.nvim_buf_set_option(buf, "modifiable", false)
 
 	-- Set the cursor to the last line
-	api.nvim_win_set_cursor(win, { #updated_lines, 0 })
+	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
 end
 
 return M
