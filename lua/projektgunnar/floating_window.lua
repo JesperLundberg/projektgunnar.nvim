@@ -107,10 +107,11 @@ function M.update(win, buf, index, total, success, command_output)
 	-- Get the current lines in the buffer
 	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
 
+	local status_symbol = success and "" or ""
 	local status_message = success and "Success" or "Failed"
 	local new_lines = {
 		tostring(index) .. " out of " .. tostring(total),
-		"Status: " .. status_message, -- TODO: Highlight failed lines
+		"Status: " .. status_message .. " " .. status_symbol, -- TODO: Highlight lines
 		"Command: " .. command_output,
 		"----------------------------------------",
 	}
