@@ -1,4 +1,18 @@
+-- Define and set highlight groups
+-- Define and set highlight groups
+local success_highlight = "SuccessMsg"
+local error_highlight = "ErrorMsg"
+
 local api = vim.api
+
+api.nvim_exec(
+	[[
+  hi link SuccessMsg Special
+  hi link ErrorMsg Error
+]],
+	false
+)
+
 local M = {}
 
 -- Method to center a string in a window
@@ -109,6 +123,10 @@ function M.update(win, buf, index, total, success, command_output)
 
 	local status_symbol = success and "" or ""
 	local status_message = success and "Success" or "Failed"
+
+	-- Set colors based on success status
+	local status_color = success and "%#SuccessMsg#" or "%#ErrorMsg#"
+
 	local new_lines = {
 		tostring(index) .. " out of " .. tostring(total),
 		"Status: " .. status_message .. " " .. status_symbol, -- TODO: Highlight lines
@@ -121,6 +139,14 @@ function M.update(win, buf, index, total, success, command_output)
 
 	-- Set the updated lines
 	api.nvim_buf_set_lines(buf, 0, -1, false, lines_to_write)
+
+	-- Highlight the status message based on success status
+	local hl_group = success and success_highlight or error_highlight
+	local row = #lines_to_write - 2 -- Adjust the row based on the position of the status line
+	local col_start = string.find(lines_to_write[row], status_symbol) - 1
+	local col_end = col_start + #status_symbol
+	api.nvim_buf_clear_namespace(buf, -1, 0, -1)
+	api.nvim_buf_add_highlight(buf, -1, hl_group, row, col_start, col_end)
 
 	-- Make the buffer unmodifiable
 	api.nvim_buf_set_option(buf, "modifiable", false)
