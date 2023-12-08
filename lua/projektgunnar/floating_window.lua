@@ -1,16 +1,4 @@
--- Define and set highlight groups
-local success_highlight = "SuccessMsg"
-local error_highlight = "ErrorMsg"
-
 local api = vim.api
-
-api.nvim_exec(
-	[[
-  hi link SuccessMsg Special
-  hi link ErrorMsg Error
-]],
-	false
-)
 
 local M = {}
 
@@ -74,13 +62,8 @@ function M.open()
 	-- If the window is closed, close the border window as well
 	api.nvim_command('au BufWipeout <buffer> exe "silent bwipeout! "' .. border_buf)
 
-	-- highlight line with the cursor on it TODO: Not needed?!
-	api.nvim_win_set_option(win, "cursorline", true)
-
 	-- we can add title already here, because first line will never change
 	api.nvim_buf_set_lines(buf, 0, -1, false, { center("ProjektGunnar"), "", "" })
-	-- set the header highlight
-	api.nvim_buf_add_highlight(buf, -1, "PGHeader", 0, 0, -1) -- TODO: Sort out the highlights
 
 	return win, buf -- Return window and buffer handles
 end
@@ -123,12 +106,9 @@ function M.update(win, buf, index, total, success, command_output)
 	local status_symbol = success and "" or ""
 	local status_message = success and "Success" or "Failed"
 
-	-- Set colors based on success status
-	local status_color = success and "%#SuccessMsg#" or "%#ErrorMsg#"
-
 	local new_lines = {
 		tostring(index) .. " out of " .. tostring(total),
-		"Status: " .. status_message .. " " .. status_symbol, -- TODO: Highlight lines
+		"Status: " .. status_message .. " " .. status_symbol,
 		"Command: " .. command_output,
 		"----------------------------------------",
 	}
@@ -138,14 +118,6 @@ function M.update(win, buf, index, total, success, command_output)
 
 	-- Set the updated lines
 	api.nvim_buf_set_lines(buf, 0, -1, false, lines_to_write)
-
-	-- Highlight the status message based on success status
-	local hl_group = success and success_highlight or error_highlight
-	local row = #lines_to_write - 2 -- Adjust the row based on the position of the status line
-	local col_start = string.find(lines_to_write[row], status_symbol) - 1
-	local col_end = col_start + #status_symbol
-	api.nvim_buf_clear_namespace(buf, -1, 0, -1)
-	api.nvim_buf_add_highlight(buf, -1, hl_group, row, col_start, col_end)
 
 	-- Make the buffer unmodifiable
 	api.nvim_buf_set_option(buf, "modifiable", false)
