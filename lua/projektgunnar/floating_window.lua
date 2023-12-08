@@ -1,5 +1,4 @@
 -- Define and set highlight groups
--- Define and set highlight groups
 local success_highlight = "SuccessMsg"
 local error_highlight = "ErrorMsg"
 
@@ -98,13 +97,13 @@ function M.print_message(win, buf, message)
 	message = { message, "----------------------------------------" }
 
 	-- Set the message
-	api.nvim_buf_set_lines(buf, 0, -1, false, message)
+	api.nvim_buf_set_lines(buf, 2, -1, false, message)
 
 	-- Make the buffer unmodifiable
 	api.nvim_buf_set_option(buf, "modifiable", false)
 
 	-- Set the cursor to the last line
-	api.nvim_win_set_cursor(win, { #message, 0 })
+	api.nvim_win_set_cursor(win, { #message, 2 })
 end
 
 -- Method to set the content of the window
