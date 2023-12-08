@@ -16,6 +16,9 @@ Install it using the way your OS allows.
 
 For Arch Linux the command is `pacman -S dotnet-sdk`.
 
+You also need nerdfonts patched version installed to get proper symbols.
+Get fonts from [here](https://github.com/ryanoasis/nerd-fonts).
+
 #### How to install
 
 Using lazy package manager:
@@ -43,11 +46,9 @@ dependencies = {
 - [x] Add project to project functionality
 - [x] Use some kind of picker to choose in the list of projects (telescope? mini.pick?)
 - [x] Make sure directory.packages.config works, also make sure it works without that file
+- [x] Add symbols for success/failed command
 - [ ] Add project to solution functionality
-- [ ] Make sure errors are handled gracefully
 
 #### Credits
 
 [Issafalcon](https://github.com/Issafalcon/) - for being patient with questions and giving me clues on what to look into.
-
-ChatGPT - for helping me with understand the coroute.

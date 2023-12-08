@@ -1,4 +1,5 @@
 local api = vim.api
+
 local M = {}
 
 -- Method to center a string in a window
@@ -61,13 +62,8 @@ function M.open()
 	-- If the window is closed, close the border window as well
 	api.nvim_command('au BufWipeout <buffer> exe "silent bwipeout! "' .. border_buf)
 
-	-- highlight line with the cursor on it TODO: Not needed?!
-	api.nvim_win_set_option(win, "cursorline", true)
-
 	-- we can add title already here, because first line will never change
 	api.nvim_buf_set_lines(buf, 0, -1, false, { center("ProjektGunnar"), "", "" })
-	-- set the header highlight
-	api.nvim_buf_add_highlight(buf, -1, "PGHeader", 0, 0, -1) -- TODO: Sort out the highlights
 
 	return win, buf -- Return window and buffer handles
 end
@@ -84,13 +80,13 @@ function M.print_message(win, buf, message)
 	message = { message, "----------------------------------------" }
 
 	-- Set the message
-	api.nvim_buf_set_lines(buf, 0, -1, false, message)
+	api.nvim_buf_set_lines(buf, 2, -1, false, message)
 
 	-- Make the buffer unmodifiable
 	api.nvim_buf_set_option(buf, "modifiable", false)
 
 	-- Set the cursor to the last line
-	api.nvim_win_set_cursor(win, { #message, 0 })
+	api.nvim_win_set_cursor(win, { #message, 2 })
 end
 
 -- Method to set the content of the window
@@ -107,10 +103,12 @@ function M.update(win, buf, index, total, success, command_output)
 	-- Get the current lines in the buffer
 	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
 
+	local status_symbol = success and "" or ""
 	local status_message = success and "Success" or "Failed"
+
 	local new_lines = {
 		tostring(index) .. " out of " .. tostring(total),
-		"Status: " .. status_message, -- TODO: Highlight failed lines
+		"Status: " .. status_message .. " " .. status_symbol,
 		"Command: " .. command_output,
 		"----------------------------------------",
 	}
