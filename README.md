@@ -16,7 +16,8 @@ Install it using the way your OS allows.
 
 For Arch Linux the command is `pacman -S dotnet-sdk`.
 
-You also need nerdfonts patched version installed to get symbols.
+You also need nerdfonts patched version installed to get proper symbols.
+Get fonts from [here](https://github.com/ryanoasis/nerd-fonts).
 
 #### How to install
 
@@ -47,7 +48,6 @@ dependencies = {
 - [x] Make sure directory.packages.config works, also make sure it works without that file
 - [x] Add symbols for success/failed command
 - [ ] Add project to solution functionality
-- [ ] Make sure errors are handled gracefully
 
 #### Credits
 
