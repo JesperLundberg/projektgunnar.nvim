@@ -29,6 +29,19 @@ local function UpdateNugetsInProject()
 	main.AddOrUpdateNugetsInProject(choice, outdated_nugets)
 end
 
+local function UpdateNugetsInSolution()
+	-- get all projects in the solution
+	local projects = utils.get_all_projects_in_solution()
+
+	for _, project in ipairs(projects) do
+		-- get all outdated nugets for the current project
+		local outdated_nugets = nugets.outdated_nugets(project)
+
+		-- update nugets in the current project
+		main.AddOrUpdateNugetsInProject(project, outdated_nugets)
+	end
+end
+
 -- add project to project
 local function AddProjectToProject()
 	-- get all projects in the solution
@@ -53,6 +66,11 @@ end
 
 vim.api.nvim_create_user_command("AddNugetToProject", AddNugetToProject, { desc = "Add Nuget to Project" })
 vim.api.nvim_create_user_command("UpdateNugetsInProject", UpdateNugetsInProject, { desc = "Update Nugets in Project" })
+vim.api.nvim_create_user_command(
+	"UpdateNugetsInSolution",
+	UpdateNugetsInSolution,
+	{ desc = "Update Nugets in Solution" }
+)
 vim.api.nvim_create_user_command(
 	"AddProjectToProject",
 	AddProjectToProject,
