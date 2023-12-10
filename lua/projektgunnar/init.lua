@@ -36,9 +36,9 @@ local function UpdateNugetsInProject()
 	end
 
 	-- create command and nugets to update table
-	local command_and_nugets =
-		{ project = choice, command = "dotnet add " .. choice .. " package ", items = outdated_nugets }
-
+	local command_and_nugets = {
+		[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = outdated_nugets },
+	}
 	-- update nugets in project
 	main.AddOrUpdateNugetsInProject(command_and_nugets)
 end
