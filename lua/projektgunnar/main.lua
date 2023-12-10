@@ -16,14 +16,22 @@ local function reset_and_cleanup()
 end
 
 -- Coroutine function to perform asynchronous task
-local function create_async_task(dotnet_command_arguments, table_of_items_to_add, win, buf)
+-- @param command_and_item table
+-- @param win number
+-- @param buf number
+local function create_async_task(command_and_item, win, buf)
 	return coroutine.create(function()
-		local total_nugets = #table_of_items_to_add
+		-- assert command and nugets variables so they are not nil
+		assert(command_and_item.command, "command_and_item.command is nil")
+		assert(command_and_item.items, "command_and_item.items is nil")
+
+		local total_commands = #command_and_item
+		local total_nugets = #command_and_item.items
 
 		-- Loop through all nugets and update them
-		for i, item_to_add in ipairs(table_of_items_to_add) do
+		for i, item_to_add in ipairs(command_and_item.items) do
 			-- Construct the dotnet command
-			local dotnet_command = "dotnet " .. dotnet_command_arguments .. item_to_add
+			local dotnet_command = command_and_item.command .. item_to_add
 
 			-- Initialize success
 			local success = false
@@ -55,31 +63,27 @@ local function create_async_task(dotnet_command_arguments, table_of_items_to_add
 end
 
 -- Function to add or update nugets in/to project
--- @param project_path string
--- @param nuget_list table
-function M.AddOrUpdateNugetsInProject(project_path, nuget_table)
+-- @param command_and_nugets table
+function M.AddOrUpdateNugetsInProject(command_and_nugets)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
 
-	-- if there are no outdated nugets, notify the user and return
-	if #nuget_table == 0 then
-		floating_window.print_message(win, buf, "No outdated nugets in project " .. project_path)
-		return
-	end
-
 	-- Notify the user that the command will add or update nugets
-	floating_window.print_message(win, buf, "Adding or updating nugets in project " .. project_path)
+	floating_window.print_message(win, buf, "Adding or updating nugets in project " .. command_and_nugets.project)
 
 	-- Reset and cleanup from previous run
 	reset_and_cleanup()
 
 	-- Create a new coroutine for the current run
-	async_task = create_async_task("add " .. project_path .. " package ", nuget_table, win, buf)
+	async_task = create_async_task(command_and_nugets, win, buf)
 
 	-- Start the coroutine with the floating window handles
 	coroutine.resume(async_task, win, buf)
 end
 
+-- Function to add project to project
+-- @param project_path string
+-- @param project_to_add_path string
 function M.AddProjectToProject(project_path, project_to_add_path)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
@@ -90,8 +94,11 @@ function M.AddProjectToProject(project_path, project_to_add_path)
 	-- Reset and cleanup from previous run
 	reset_and_cleanup()
 
+	local command_and_project =
+		{ command = "dotnet add " .. project_path .. " reference ", items = { project_to_add_path } }
+
 	-- Create a new coroutine for the current run
-	async_task = create_async_task("add " .. project_path .. " reference ", { project_to_add_path }, win, buf)
+	async_task = create_async_task(command_and_project, win, buf)
 
 	-- Start the coroutine with the floating window handles
 	coroutine.resume(async_task, win, buf)
