@@ -70,8 +70,10 @@ function M.AddOrUpdateNugetsInProject(command_and_nugets)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
 
+	local project_or_solution = #command_and_nugets and " solution" or " project"
+
 	-- Notify the user that the command will add or update nugets
-	floating_window.print_message(win, buf, "Adding or updating nugets in project " .. command_and_nugets[1].project)
+	floating_window.print_message(win, buf, "Adding or updating nugets in" .. project_or_solution)
 
 	-- Reset and cleanup from previous run
 	reset_and_cleanup()

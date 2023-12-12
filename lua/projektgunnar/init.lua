@@ -53,11 +53,10 @@ local function UpdateNugetsInSolution()
 		-- get all outdated nugets for the selected project
 		local outdated_nugets = nugets.outdated_nugets(project)
 
-		print(i .. " out of " .. #projects .. " projects")
+		print("Checking " .. i .. " out of " .. #projects .. " projects")
 
 		-- if there are no outdated nugets, notify the user and return
 		if #outdated_nugets == 0 then
-			print("No outdated nugets in project " .. project)
 			goto continue
 		end
 
@@ -71,8 +70,6 @@ local function UpdateNugetsInSolution()
 
 		::continue::
 	end
-
-	print(vim.inspect(all_projects_and_nugets))
 
 	main.AddOrUpdateNugetsInProject(all_projects_and_nugets)
 end
