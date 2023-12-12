@@ -1,6 +1,6 @@
 # projektgunnar.nvim
 
-Gunnar is the nice old man who helps you add projects or packages to dotnet solutions so you can take a Fika(tm) instead of having to remember how to do the different dotnet commands.
+Gunnar is the nice old Swedish man who helps you add projects or packages to dotnet solutions so you can take a Fika(tm) instead of having to remember how to do the different dotnet commands.
 
 #### Why?
 
@@ -52,3 +52,5 @@ dependencies = {
 #### Credits
 
 [Issafalcon](https://github.com/Issafalcon/) - for being patient with questions and giving me clues on what to look into.
+
+[echasnovski](https://github.com/echasnovski) - for creating the mini library and in this case mini.pick which I am using here.
