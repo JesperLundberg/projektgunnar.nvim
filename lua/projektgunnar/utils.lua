@@ -9,4 +9,16 @@ function M.get_all_projects_in_solution()
 	return vim.list_slice(output, 3, #output)
 end
 
+-- Function to concatenate two tables
+-- @param t1 table
+-- @param t2 table
+-- @return table
+function M.table_concat(t1, t2)
+	for i = 1, #t2 do
+		t1[#t1 + 1] = t2[i]
+	end
+
+	return t1
+end
+
 return M

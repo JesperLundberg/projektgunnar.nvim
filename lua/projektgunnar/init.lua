@@ -43,18 +43,39 @@ local function UpdateNugetsInProject()
 	main.AddOrUpdateNugetsInProject(command_and_nugets)
 end
 
--- local function UpdateNugetsInSolution()
--- 	-- get all projects in the solution
--- 	local projects = utils.get_all_projects_in_solution()
---
--- 	for _, project in ipairs(projects) do
--- 		-- get all outdated nugets for the current project
--- 		local outdated_nugets = nugets.outdated_nugets(project)
---
--- 		-- update nugets in the current project
--- 		main.AddOrUpdateNugetsInProject(project, outdated_nugets)
--- 	end
--- end
+local function UpdateNugetsInSolution()
+	-- get all projects in the solution
+	local projects = utils.get_all_projects_in_solution()
+
+	local all_projects_and_nugets = {}
+
+	for i, project in ipairs(projects) do
+		-- get all outdated nugets for the selected project
+		local outdated_nugets = nugets.outdated_nugets(project)
+
+		print(i .. " out of " .. #projects .. " projects")
+
+		-- if there are no outdated nugets, notify the user and return
+		if #outdated_nugets == 0 then
+			print("No outdated nugets in project " .. project)
+			goto continue
+		end
+
+		-- create command and nugets to update table
+		local command_and_nugets = {
+			[1] = { project = project, command = "dotnet add " .. project .. " package ", items = outdated_nugets },
+		}
+
+		-- update nugets in project
+		utils.table_concat(all_projects_and_nugets, command_and_nugets)
+
+		::continue::
+	end
+
+	print(vim.inspect(all_projects_and_nugets))
+
+	main.AddOrUpdateNugetsInProject(all_projects_and_nugets)
+end
 
 -- add project to project
 local function AddProjectToProject()
@@ -80,11 +101,11 @@ end
 
 vim.api.nvim_create_user_command("AddNugetToProject", AddNugetToProject, { desc = "Add Nuget to Project" })
 vim.api.nvim_create_user_command("UpdateNugetsInProject", UpdateNugetsInProject, { desc = "Update Nugets in Project" })
--- vim.api.nvim_create_user_command(
--- 	"UpdateNugetsInSolution",
--- 	UpdateNugetsInSolution,
--- 	{ desc = "Update Nugets in Solution" }
--- )
+vim.api.nvim_create_user_command(
+	"UpdateNugetsInSolution",
+	UpdateNugetsInSolution,
+	{ desc = "Update Nugets in Solution" }
+)
 vim.api.nvim_create_user_command(
 	"AddProjectToProject",
 	AddProjectToProject,

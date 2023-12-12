@@ -58,10 +58,9 @@ local function create_async_task(command_and_items, win, buf)
 				-- Suspend the coroutine until the job exit callback is executed
 				coroutine.yield()
 			end
-
-			-- After all iterations are complete, reset and clean up
-			M.reset_and_cleanup()
 		end
+		-- After all iterations are complete, reset and clean up
+		M.reset_and_cleanup()
 	end)
 end
 
