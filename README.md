@@ -32,11 +32,12 @@ dependencies = {
 
 #### Available commands
 
-| Command               | Description                                     |
-| --------------------- | ----------------------------------------------- |
-| AddNugetToProject     | Add a nuget package to a project                |
-| UpdateNugetsInProject | Update all nuget packages in the chosen project |
-| AddProjectToProject   | Add a project as reference in another           |
+| Command                | Description                                      |
+| ---------------------- | ------------------------------------------------ |
+| AddNugetToProject      | Add a nuget package to a project                 |
+| UpdateNugetsInProject  | Update all nuget packages in the chosen project  |
+| UpdateNugetsInSolution | Update all nuget packages in the chosen solution |
+| AddProjectToProject    | Add a project as reference in another            |
 
 #### TODO
 
