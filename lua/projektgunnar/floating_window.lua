@@ -151,4 +151,29 @@ function M.update(win, buf, index, total, success, command_output)
 	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
 end
 
+function M.update_progress(win, buf, index, total)
+	-- Make the buffer modifiable
+	api.nvim_buf_set_option(buf, "modifiable", true)
+
+	-- Get the current lines in the buffer
+	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
+
+	local new_lines = {
+		"Updating project " .. tostring(index) .. " out of " .. tostring(total),
+		"----------------------------------------",
+	}
+
+	-- Add the new lines to the current lines
+	local lines_to_write = vim.list_extend(current_lines, new_lines)
+
+	-- Set the updated lines
+	api.nvim_buf_set_lines(buf, 0, -1, false, lines_to_write)
+
+	-- Make the buffer unmodifiable
+	api.nvim_buf_set_option(buf, "modifiable", false)
+
+	-- Set the cursor to the last line
+	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
+end
+
 return M

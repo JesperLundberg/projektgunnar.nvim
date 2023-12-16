@@ -27,8 +27,11 @@ local function create_async_task(command_and_items, win, buf)
 			assert(command_and_item.command, "command_and_item.command is nil")
 			assert(command_and_item.items, "command_and_item.items is nil")
 
-			local total_commands = #command_and_item
+			local total_commands = #command_and_items
 			local total_nugets = #command_and_item.items
+
+			-- Print progress
+			floating_window.update_progress(win, buf, i, total_commands)
 
 			-- Loop through all nugets and update them
 			for j, item_to_add in ipairs(command_and_item.items) do
