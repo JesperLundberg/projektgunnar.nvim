@@ -27,8 +27,11 @@ local function create_async_task(command_and_items, win, buf)
 			assert(command_and_item.command, "command_and_item.command is nil")
 			assert(command_and_item.items, "command_and_item.items is nil")
 
-			local total_commands = #command_and_item
+			local total_commands = #command_and_items
 			local total_nugets = #command_and_item.items
+
+			-- Print progress
+			floating_window.update_progress(win, buf, i, total_commands)
 
 			-- Loop through all nugets and update them
 			for j, item_to_add in ipairs(command_and_item.items) do
@@ -57,6 +60,11 @@ local function create_async_task(command_and_items, win, buf)
 
 				-- Suspend the coroutine until the job exit callback is executed
 				coroutine.yield()
+			end
+
+			-- when all work is done, update the floating window with a done message
+			if #command_and_items == i then
+				floating_window.update_with_done_message(win, buf)
 			end
 		end
 		-- After all iterations are complete, reset and clean up

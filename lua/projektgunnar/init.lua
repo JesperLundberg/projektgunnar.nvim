@@ -14,9 +14,9 @@ local function AddNugetToProject()
 
 	-- create command and nuget to add table
 	local command_and_nuget_to_add = {
-		[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = { nugetToAdd } }
+		[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = { nugetToAdd } },
 	}
-	
+
 	-- add nuget to project
 	main.AddOrUpdateNugetsInProject(command_and_nuget_to_add)
 end
