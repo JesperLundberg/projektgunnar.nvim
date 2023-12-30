@@ -8,9 +8,21 @@ local function AddNugetToProject()
 	-- ask user for nuget to add
 	local nugetToAdd = vim.fn.input("Nuget to add: ")
 
+	-- if the user did not select a nuget, return
+	if nugetToAdd == "" then
+		vim.api.nvim_err_writeln("No nuget selected")
+
+		return
+	end
+
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
 	local choice = picker.AskUserForProject(projects)
+
+	-- if the user did not select a project, return
+	if not choice then
+		return
+	end
 
 	-- create command and nuget to add table
 	local command_and_nuget_to_add = {
@@ -26,6 +38,11 @@ local function UpdateNugetsInProject()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
 	local choice = picker.AskUserForProject(projects)
+
+	-- if the user did not select a project, return
+	if not choice then
+		return
+	end
 
 	-- get all outdated nugets for the selected project
 	local outdated_nugets = nugets.outdated_nugets(choice)
@@ -82,6 +99,11 @@ local function AddProjectToProject()
 	local choice = picker.AskUserForProject(projects)
 	local projectToAddTo = choice
 
+	-- if the user did not select a project, return
+	if not choice then
+		return
+	end
+
 	-- remove the project we are adding to from the list of projects to add
 	for i, v in ipairs(projects) do
 		if v == projectToAddTo then
@@ -92,6 +114,11 @@ local function AddProjectToProject()
 
 	-- ask user for project to add
 	choice = picker.AskUserForProject(projects)
+
+	-- if the user did not select a project, return
+	if not choice then
+		return
+	end
 
 	-- add project to project
 	main.AddProjectToProject(projectToAddTo, choice)
