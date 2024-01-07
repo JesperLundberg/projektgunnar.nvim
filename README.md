@@ -41,6 +41,7 @@ dependencies = {
 | UpdateNugetsInProject  | Update all nuget packages in the chosen project  |
 | UpdateNugetsInSolution | Update all nuget packages in the chosen solution |
 | AddProjectToProject    | Add a project as reference in another            |
+| AddProjectToSolution   | Add a project to the solution file               |
 
 #### TODO
 
