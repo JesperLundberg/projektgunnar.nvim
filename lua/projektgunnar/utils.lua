@@ -1,6 +1,7 @@
 local M = {}
 
 -- Function to get all projects in the solution
+-- @return table
 function M.get_all_projects_in_solution()
 	-- run the dotnet command from the root of the project using solution file got get all available projects
 	local output = vim.fn.systemlist("dotnet sln list")
