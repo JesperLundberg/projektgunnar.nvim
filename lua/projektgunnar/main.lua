@@ -126,4 +126,25 @@ function M.AddProjectToProject()
 	async.AddProjectToProject(projectToAddTo, choice)
 end
 
+function M.AddProjectToSolution()
+	-- get all projects in the solution folder and in the solution respectively
+	local allCsprojFiles = utils.get_all_projects_in_solution_folder_not_in_solution()
+	local projectsInSolution = utils.get_all_projects_in_solution()
+
+	local projectsNotInSolution = {}
+
+	-- find all csproj files that are not in the solution
+	for _, csprojFile in ipairs(allCsprojFiles) do
+		if not utils.has_value(projectsInSolution, csprojFile) then
+			table.insert(projectsNotInSolution, csprojFile)
+		end
+	end
+
+	-- ask user for project to add to solution
+	local choice = picker.AskUserForProject(projectsNotInSolution)
+
+	-- add project to solution
+	async.AddProjectToSolution(choice)
+end
+
 return M

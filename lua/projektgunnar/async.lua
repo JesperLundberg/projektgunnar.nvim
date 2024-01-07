@@ -117,4 +117,26 @@ function M.AddProjectToProject(project_path, project_to_add_path)
 	coroutine.resume(async_task, win, buf)
 end
 
+-- Function to add project to solution
+-- @param project_to_add_path string
+function M.AddProjectToSolution(project_to_add_path)
+	-- Open a floating window and get handles
+	local win, buf = floating_window.open()
+
+	-- Notify the user that the command will add project to project
+	floating_window.print_message(win, buf, "Adding project " .. project_to_add_path .. " to solution")
+
+	-- Reset and cleanup from previous run
+	reset_and_cleanup()
+
+	local command_and_project = {
+		[1] = { command = "dotnet sln add ", items = { project_to_add_path } },
+	}
+	-- Create a new coroutine for the current run
+	async_task = create_async_task(command_and_project, win, buf)
+
+	-- Start the coroutine with the floating window handles
+	coroutine.resume(async_task, win, buf)
+end
+
 return M

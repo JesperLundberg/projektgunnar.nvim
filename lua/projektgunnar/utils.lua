@@ -10,6 +10,28 @@ function M.get_all_projects_in_solution()
 	return vim.list_slice(output, 3, #output)
 end
 
+function M.get_all_projects_in_solution_folder_not_in_solution()
+	-- find all csproj files in the solution folders
+	local output = vim.fn.systemlist("find . -name '*.csproj'")
+
+	-- remove the first two characters of each line as that is a dot and a slash
+	for i, v in ipairs(output) do
+		output[i] = string.sub(v, 3)
+	end
+
+	return output
+end
+
+function M.has_value(tab, val)
+	for _, value in ipairs(tab) do
+		if value == val then
+			return true
+		end
+	end
+
+	return false
+end
+
 -- Function to concatenate two tables
 -- @param t1 table
 -- @param t2 table

@@ -1,5 +1,10 @@
 local main = require("projektgunnar.main")
 
+vim.api.nvim_create_user_command(
+	"AddProjectToSolution",
+	main.AddProjectToSolution,
+	{ desc = "Add project to solution" }
+)
 vim.api.nvim_create_user_command("AddNugetToProject", main.AddNugetToProject, { desc = "Add Nuget to Project" })
 vim.api.nvim_create_user_command(
 	"UpdateNugetsInProject",
