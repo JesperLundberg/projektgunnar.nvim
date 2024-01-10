@@ -3,6 +3,7 @@
 Gunnar is the nice old Swedish man who helps you add projects or packages to dotnet solutions so you can take a Fika(tm) instead of having to remember how to do the different dotnet commands.
 
 #### Demo
+
 ![Demo](https://github.com/JesperLundberg/projektgunnar.nvim/assets/4082519/827ac4be-9e47-42bd-a015-88e08d3a1f4a)
 
 #### Why?
@@ -30,8 +31,12 @@ Using lazy package manager:
 "JesperLundberg/projektgunnar.nvim",
 dependencies = {
     "echasnovski/mini.pick",
+    "echasnovski/mini.notify",
 },
 ```
+
+> [!CRITICAL]
+> At the moment mini.notify overwrites any existing notification plugin. It's on the list to make sure mini.notify is optional and if used then it is unloaded after plugin is done with it's work.
 
 #### Available commands
 
@@ -52,7 +57,9 @@ dependencies = {
 - [x] Use some kind of picker to choose in the list of projects (telescope? mini.pick?)
 - [x] Make sure directory.packages.config works, also make sure it works without that file
 - [x] Add symbols for success/failed command
-- [ ] Add project to solution functionality
+- [x] Add project to solution functionality
+- [x] Use mini.notify to give messages to user
+- [x] Make mini.notify optional or make sure it's unloaded after each run as it takes over messages otherwise
 
 #### Credits
 
