@@ -35,7 +35,7 @@ dependencies = {
 },
 ```
 
-> [!CRITICAL]
+> [!CAUTION]
 > At the moment mini.notify overwrites any existing notification plugin. It's on the list to make sure mini.notify is optional and if used then it is unloaded after plugin is done with it's work.
 
 #### Available commands
