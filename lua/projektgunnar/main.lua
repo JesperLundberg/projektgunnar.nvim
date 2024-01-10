@@ -2,6 +2,15 @@ local async = require("projektgunnar.async")
 local utils = require("projektgunnar.utils")
 local nugets = require("projektgunnar.nugets")
 local picker = require("projektgunnar.picker")
+local notify = require("mini.notify")
+
+-- setup notify and set duration for each level
+notify.setup()
+vim.notify = notify.make_notify({
+	ERROR = { duration = 2000 },
+	WARN = { duration = 2000 },
+	INFO = { duration = 2000 },
+})
 
 local M = {}
 
@@ -12,8 +21,8 @@ function M.AddNugetToProject()
 
 	-- if the user did not select a nuget, return
 	if nugetToAdd == "" then
-		vim.api.nvim_err_writeln("No nuget selected")
-
+		-- vim.api.nvim_err_writeln("No nuget selected")
+		vim.notify("No nuget selected", vim.log.levels.ERROR)
 		return
 	end
 
@@ -51,7 +60,7 @@ function M.UpdateNugetsInProject()
 
 	-- if there are no outdated nugets, notify the user and return
 	if #outdated_nugets == 0 then
-		print("No outdated nugets in project " .. choice)
+		vim.notify("No outdated nugets in project " .. choice, vim.log.levels.WARN)
 		return
 	end
 
@@ -73,10 +82,11 @@ function M.UpdateNugetsInSolution()
 		-- get all outdated nugets for the selected project
 		local outdated_nugets = nugets.outdated_nugets(project)
 
-		print("Checking " .. i .. " out of " .. #projects .. " projects")
+		vim.notify("Checking " .. i .. " out of " .. #projects .. " projects", vim.log.levels.INFO)
 
 		-- if there are no outdated nugets, notify the user and return
 		if #outdated_nugets == 0 then
+			vim.notify("No outdated nugets in project " .. project, vim.log.levels.WARN)
 			goto continue
 		end
 
