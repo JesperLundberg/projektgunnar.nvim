@@ -31,12 +31,13 @@ Using lazy package manager:
 "JesperLundberg/projektgunnar.nvim",
 dependencies = {
     "echasnovski/mini.pick",
-    "echasnovski/mini.notify",
+    "echasnovski/mini.notify", -- optional
 },
 ```
 
 > [!CAUTION]
-> At the moment mini.notify overwrites any existing notification plugin. It's on the list to make sure mini.notify is optional and if used then it is unloaded after plugin is done with it's work.
+> At the moment mini.notify overwrites any existing notification plugin.
+> mini.notify is now optional but it still overwrites existing notifixation plugin if any is used.
 
 #### Available commands
 
@@ -50,19 +51,10 @@ dependencies = {
 
 #### TODO
 
-- [x] Make another command called UpdatePackagesInProject that updates all packages in the chosen project
-- [x] Make result show up in a floating window
-- [x] Add some kind of progress buffer when updating all nugets
-- [x] Add project to project functionality
-- [x] Use some kind of picker to choose in the list of projects (telescope? mini.pick?)
-- [x] Make sure directory.packages.config works, also make sure it works without that file
-- [x] Add symbols for success/failed command
-- [x] Add project to solution functionality
-- [x] Use mini.notify to give messages to user
-- [x] Make mini.notify optional or make sure it's unloaded after each run as it takes over messages otherwise
+- [ ] Make sure mini.notify is unloaded after each run as it takes over messages otherwise
 
 #### Credits
 
 [Issafalcon](https://github.com/Issafalcon/) - for being patient with questions and giving me clues on what to look into.
 
-[echasnovski](https://github.com/echasnovski) - for creating the mini library and in this case mini.pick which I am using here.
+[echasnovski](https://github.com/echasnovski) - for creating the mini library and in this case mini.pick and mini.nofity which I am using here.
