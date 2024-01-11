@@ -1,5 +1,15 @@
 local M = {}
 
+-- Function to require a module and return nil if it fails
+-- @param module string
+function M.prequire(module)
+	local ok, err = pcall(require, module)
+	if not ok then
+		return nil, err
+	end
+	return err
+end
+
 -- Function to get all projects in the solution
 -- @return table
 function M.get_all_projects_in_solution()
