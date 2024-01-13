@@ -3,20 +3,6 @@ local utils = require("projektgunnar.utils")
 local nugets = require("projektgunnar.nugets")
 local picker = require("projektgunnar.picker")
 
--- check if notify is available
-local notify = utils.prequire("mini.notify")
-
--- if notify is available, setup notify
-if notify then
-	-- setup notify and set duration for each level
-	notify.setup()
-	vim.notify = notify.make_notify({
-		ERROR = { duration = 2000 },
-		WARN = { duration = 2000 },
-		INFO = { duration = 2000 },
-	})
-end
-
 local M = {}
 
 -- add nuget to project

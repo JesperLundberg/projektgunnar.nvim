@@ -31,13 +31,8 @@ Using lazy package manager:
 "JesperLundberg/projektgunnar.nvim",
 dependencies = {
     "echasnovski/mini.pick",
-    "echasnovski/mini.notify", -- optional
 },
 ```
-
-> [!CAUTION]
-> At the moment mini.notify overwrites any existing notification plugin.
-> mini.notify is now optional but it still overwrites existing notifixation plugin if any is used.
 
 #### Available commands
 
