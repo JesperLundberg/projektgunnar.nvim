@@ -46,8 +46,6 @@ dependencies = {
 
 #### TODO
 
-- [ ] Make sure mini.notify is unloaded after each run as it takes over messages otherwise
-
 #### Credits
 
 [Issafalcon](https://github.com/Issafalcon/) - for being patient with questions and giving me clues on what to look into.
