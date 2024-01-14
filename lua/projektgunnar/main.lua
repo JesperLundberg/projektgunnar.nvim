@@ -19,7 +19,7 @@ function M.AddNugetToProject()
 
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local choice = picker.AskUserForProject(projects)
+	local choice = picker.AskUserForChoice(projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -32,14 +32,53 @@ function M.AddNugetToProject()
 	}
 
 	-- add nuget to project
-	async.AddOrUpdateNugetsInProject(command_and_nuget_to_add)
+	async.HandleNugetsInProject("Add", command_and_nuget_to_add)
+end
+
+-- remove nuget from project
+function M.RemoveNugetFromProject()
+	-- get all projects in the solution
+	local projects = utils.get_all_projects_in_solution()
+	local choice = picker.AskUserForChoice(projects)
+
+	-- if the user did not select a project, return
+	if not choice then
+		vim.notify("No project chosen", vim.log.levels.WARN)
+		return
+	end
+
+	-- get all nugets for the selected project
+	local all_nugets = nugets.all_nugets(choice)
+
+	-- if there are no nugets, notify the user and return
+	if #all_nugets == 0 then
+		vim.notify("No nugets in project " .. choice, vim.log.levels.WARN)
+		return
+	end
+
+	-- ask user for nuget to remove
+	local nugetToRemove = picker.AskUserForChoice(all_nugets)
+
+	-- if the user did not select a nuget, return
+	if not nugetToRemove then
+		vim.notify("No nuget chosen", vim.log.levels.WARN)
+		return
+	end
+
+	-- create command and nuget to remove table
+	local command_and_nuget_to_remove = {
+		[1] = { project = choice, command = "dotnet remove " .. choice .. " package ", items = { nugetToRemove } },
+	}
+
+	-- remove nuget from project
+	async.HandleNugetsInProject("Remove", command_and_nuget_to_remove)
 end
 
 -- update nugets in project
 function M.UpdateNugetsInProject()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local choice = picker.AskUserForProject(projects)
+	local choice = picker.AskUserForChoice(projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -60,7 +99,7 @@ function M.UpdateNugetsInProject()
 		[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = outdated_nugets },
 	}
 	-- update nugets in project
-	async.AddOrUpdateNugetsInProject(command_and_nugets)
+	async.HandleNugetsInProject("Update", command_and_nugets)
 end
 
 function M.UpdateNugetsInSolution()
@@ -92,14 +131,14 @@ function M.UpdateNugetsInSolution()
 		::continue::
 	end
 
-	async.AddOrUpdateNugetsInProject(all_projects_and_nugets)
+	async.HandleNugetsInProject("Update", all_projects_and_nugets)
 end
 
 -- add project to project
 function M.AddProjectToProject()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local choice = picker.AskUserForProject(projects)
+	local choice = picker.AskUserForChoice(projects)
 	local projectToAddTo = choice
 
 	-- if the user did not select a project, return
@@ -116,7 +155,7 @@ function M.AddProjectToProject()
 	end
 
 	-- ask user for project to add
-	choice = picker.AskUserForProject(projects)
+	choice = picker.AskUserForChoice(projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -142,7 +181,7 @@ function M.AddProjectToSolution()
 	end
 
 	-- ask user for project to add to solution
-	local choice = picker.AskUserForProject(projectsNotInSolution)
+	local choice = picker.AskUserForChoice(projectsNotInSolution)
 
 	-- add project to solution
 	async.AddProjectToSolution(choice)

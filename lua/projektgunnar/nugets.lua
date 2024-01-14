@@ -7,4 +7,11 @@ function M.outdated_nugets(project)
 	return vim.fn.systemlist("dotnet list " .. project .. " package --outdated  | awk '/>/{print $2}'")
 end
 
+-- Function to get all nugets for a project
+-- @param project string
+function M.all_nugets(project)
+	-- run the outdated nugets command for the selected project
+	return vim.fn.systemlist("dotnet list " .. project .. " package | awk '/>/{print $2}'")
+end
+
 return M
