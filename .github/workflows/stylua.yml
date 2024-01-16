@@ -1,19 +1,19 @@
-name: main
+name: stylua
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
     types: [opened, synchronize]
 
 concurrency:
-  group: github.head_ref
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  lint:
+  style:
     runs-on: ubuntu-latest
-    name: lint
+    name: style
     steps:
       - uses: actions/checkout@v3
 
