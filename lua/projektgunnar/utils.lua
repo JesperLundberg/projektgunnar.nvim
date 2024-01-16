@@ -10,6 +10,18 @@ function M.prequire(module)
 	return err
 end
 
+function M.get_project_references(project)
+	local output = vim.fn.systemlist("dotnet list " .. project .. " reference")
+
+	-- remove the first two characters of each line as that is dotdot and change all backslashes to forward slashes
+	for i, v in ipairs(output) do
+		output[i] = string.sub(v, 3).gsub(v, "\\", "/")
+	end
+
+	-- remove the first two lines from the output as they are Projects and ----------
+	return vim.list_slice(output, 3, #output)
+end
+
 -- Function to get all projects in the solution
 -- @return table
 function M.get_all_projects_in_solution()

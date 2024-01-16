@@ -96,21 +96,40 @@ function M.HandleNugetsInProject(action, command_and_nugets)
 end
 
 -- Function to add project to project
+-- @param action string
 -- @param project_path string
--- @param project_to_add_path string
-function M.AddProjectToProject(project_path, project_to_add_path)
+-- @param project_reference_path string
+function M.HandleProjectReference(action, project_path, project_reference_path)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
 
-	-- Notify the user that the command will add project to project
-	floating_window.print_message(win, buf, "Adding project " .. project_to_add_path .. " to project " .. project_path)
+	-- Notify the user that the command either add or remove project reference
+	if action == "add" then
+		floating_window.print_message(
+			win,
+			buf,
+			"Adding project " .. project_reference_path .. " to project " .. project_path
+		)
+	else
+		floating_window.print_message(
+			win,
+			buf,
+			"Removing project " .. project_reference_path .. " from project " .. project_path
+		)
+	end
 
 	-- Reset and cleanup from previous run
 	reset_and_cleanup()
 
 	local command_and_project = {
-		[1] = { command = "dotnet add " .. project_path .. " reference ", items = { project_to_add_path } },
+		[1] = {
+			command = "dotnet " .. action .. " " .. project_path .. " reference ",
+			items = {
+				project_reference_path,
+			},
+		},
 	}
+
 	-- Create a new coroutine for the current run
 	async_task = create_async_task(command_and_project, win, buf)
 
