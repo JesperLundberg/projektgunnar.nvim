@@ -12,7 +12,6 @@ function M.AddNugetToProject()
 
 	-- if the user did not select a nuget, return
 	if nugetToAdd == "" then
-		-- vim.api.nvim_err_writeln("No nuget selected")
 		vim.notify("No nuget selected", vim.log.levels.ERROR)
 		return
 	end
@@ -23,6 +22,7 @@ function M.AddNugetToProject()
 
 	-- if the user did not select a project, return
 	if not choice then
+		vim.notify("No project chosen", vim.log.levels.ERROR)
 		return
 	end
 
@@ -43,7 +43,7 @@ function M.RemoveNugetFromProject()
 
 	-- if the user did not select a project, return
 	if not choice then
-		vim.notify("No project chosen", vim.log.levels.WARN)
+		vim.notify("No project chosen", vim.log.levels.ERROR)
 		return
 	end
 
@@ -82,6 +82,7 @@ function M.UpdateNugetsInProject()
 
 	-- if the user did not select a project, return
 	if not choice then
+		vim.notify("No project chosen", vim.log.levels.ERROR)
 		return
 	end
 
@@ -134,8 +135,8 @@ function M.UpdateNugetsInSolution()
 	async.HandleNugetsInProject("Update", all_projects_and_nugets)
 end
 
--- add project to project
-function M.AddProjectToProject()
+-- Function to add or remove project reference
+function M.AddProjectReference()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
 	local choice = picker.AskUserForChoice(projects)
@@ -143,6 +144,7 @@ function M.AddProjectToProject()
 
 	-- if the user did not select a project, return
 	if not choice then
+		vim.notify("No project chosen", vim.log.levels.ERROR)
 		return
 	end
 
@@ -159,13 +161,46 @@ function M.AddProjectToProject()
 
 	-- if the user did not select a project, return
 	if not choice then
+		vim.notify("No project chosen", vim.log.levels.ERROR)
 		return
 	end
 
 	-- add project to project
-	async.AddProjectToProject(projectToAddTo, choice)
+	async.HandleProjectReference("add", projectToAddTo, choice)
 end
 
+-- remove project from project
+function M.RemoveProjectReference()
+	-- get all projects in the solution
+	local projects = utils.get_all_projects_in_solution()
+	local choice = picker.AskUserForChoice(projects)
+	local projectToRemoveFrom = choice
+
+	-- if the user did not select a project, return
+	if not choice then
+		vim.notify("No project chosen", vim.log.levels.ERROR)
+		return
+	end
+
+	-- get all project references for the selected project
+	local project_references = utils.get_project_references(projectToRemoveFrom)
+
+	print(vim.inspect(project_references))
+
+	-- ask user for project to remove
+	choice = picker.AskUserForChoice(project_references)
+
+	-- if the user did not select a project, return
+	if not choice then
+		vim.notify("No project chosen", vim.log.levels.ERROR)
+		return
+	end
+
+	-- remove project from project
+	async.HandleProjectReference("remove", projectToRemoveFrom, choice)
+end
+
+-- add project to solution
 function M.AddProjectToSolution()
 	-- get all projects in the solution folder and in the solution respectively
 	local allCsprojFiles = utils.get_all_projects_in_solution_folder_not_in_solution()
@@ -182,6 +217,12 @@ function M.AddProjectToSolution()
 
 	-- ask user for project to add to solution
 	local choice = picker.AskUserForChoice(projectsNotInSolution)
+
+	-- if the user did not select a project, return
+	if not choice then
+		vim.notify("No project chosen", vim.log.levels.ERROR)
+		return
+	end
 
 	-- add project to solution
 	async.AddProjectToSolution(choice)

@@ -23,6 +23,11 @@ vim.api.nvim_create_user_command(
 )
 vim.api.nvim_create_user_command(
 	"AddProjectToProject",
-	main.AddProjectToProject,
+	main.AddProjectReference,
 	{ desc = "Add one project as a reference to another" }
+)
+vim.api.nvim_create_user_command(
+	"RemoveProjectFromProject",
+	main.RemoveProjectReference,
+	{ desc = "Remove one project reference from a project" }
 )
