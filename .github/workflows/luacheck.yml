@@ -17,8 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: lunarmodules/luacheck@v1
+      - uses: lunarmodules/luacheck@v1.1.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: latest
-          args: --check .
