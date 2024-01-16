@@ -36,14 +36,15 @@ dependencies = {
 
 #### Available commands
 
-| Command                | Description                                      |
-| ---------------------- | ------------------------------------------------ |
-| AddNugetToProject      | Add a nuget package to a project                 |
-| RemoveNugetFromProject | Remove a nuget package from a project            |
-| UpdateNugetsInProject  | Update all nuget packages in the chosen project  |
-| UpdateNugetsInSolution | Update all nuget packages in the chosen solution |
-| AddProjectToProject    | Add a project as reference in another            |
-| AddProjectToSolution   | Add a project to the solution file               |
+| Command                  | Description                                      |
+| ------------------------ | ------------------------------------------------ |
+| AddNugetToProject        | Add a nuget package to a project                 |
+| RemoveNugetFromProject   | Remove a nuget package from a project            |
+| UpdateNugetsInProject    | Update all nuget packages in the chosen project  |
+| UpdateNugetsInSolution   | Update all nuget packages in the chosen solution |
+| AddProjectToProject      | Add a project as reference in another            |
+| RemoveProjectFromProject | Remove a project as reference in another         |
+| AddProjectToSolution     | Add a project to the solution file               |
 
 #### TODO
 
