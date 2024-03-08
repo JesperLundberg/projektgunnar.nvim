@@ -3,6 +3,7 @@ local api = vim.api
 local M = {}
 
 -- Method to center a string in a window
+-- @param str string
 local function center(str)
 	local width = api.nvim_win_get_width(0)
 	local shift = math.floor(width / 2) - math.floor(string.len(str) / 2)
@@ -10,6 +11,7 @@ local function center(str)
 end
 
 -- Floating result window
+-- @return number, number
 function M.open()
 	-- Create buffers for both windows
 	local buf = api.nvim_create_buf(false, true)

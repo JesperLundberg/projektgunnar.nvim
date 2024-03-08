@@ -6,19 +6,19 @@ local picker = require("projektgunnar.picker")
 local M = {}
 
 -- add nuget to project
-function M.AddNugetToProject()
+function M.add_nuget_to_project()
 	-- ask user for nuget to add
-	local nugetToAdd = vim.fn.input("Nuget to add: ")
+	local nuget_to_add = vim.fn.input("Nuget to add: ")
 
 	-- if the user did not select a nuget, return
-	if nugetToAdd == "" then
+	if nuget_to_add == "" then
 		vim.notify("No nuget selected", vim.log.levels.ERROR)
 		return
 	end
 
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local choice = picker.AskUserForChoice(projects)
+	local choice = picker.ask_user_for_choice(projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -28,18 +28,18 @@ function M.AddNugetToProject()
 
 	-- create command and nuget to add table
 	local command_and_nuget_to_add = {
-		[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = { nugetToAdd } },
+		[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = { nuget_to_add } },
 	}
 
 	-- add nuget to project
-	async.HandleNugetsInProject("Add", command_and_nuget_to_add)
+	async.handle_nugets_in_project("Add", command_and_nuget_to_add)
 end
 
 -- remove nuget from project
-function M.RemoveNugetFromProject()
+function M.remove_nuget_from_project()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local choice = picker.AskUserForChoice(projects)
+	local choice = picker.ask_user_for_choice(projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -57,28 +57,28 @@ function M.RemoveNugetFromProject()
 	end
 
 	-- ask user for nuget to remove
-	local nugetToRemove = picker.AskUserForChoice(all_nugets)
+	local nuget_to_remove = picker.ask_user_for_choice(all_nugets)
 
 	-- if the user did not select a nuget, return
-	if not nugetToRemove then
+	if not nuget_to_remove then
 		vim.notify("No nuget chosen", vim.log.levels.WARN)
 		return
 	end
 
 	-- create command and nuget to remove table
 	local command_and_nuget_to_remove = {
-		[1] = { project = choice, command = "dotnet remove " .. choice .. " package ", items = { nugetToRemove } },
+		[1] = { project = choice, command = "dotnet remove " .. choice .. " package ", items = { nuget_to_remove } },
 	}
 
 	-- remove nuget from project
-	async.HandleNugetsInProject("Remove", command_and_nuget_to_remove)
+	async.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
 end
 
 -- update nugets in project
-function M.UpdateNugetsInProject()
+function M.update_nugets_in_project()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local choice = picker.AskUserForChoice(projects)
+	local choice = picker.ask_user_for_choice(projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -100,10 +100,11 @@ function M.UpdateNugetsInProject()
 		[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = outdated_nugets },
 	}
 	-- update nugets in project
-	async.HandleNugetsInProject("Update", command_and_nugets)
+	async.handle_nugets_in_project("Update", command_and_nugets)
 end
 
-function M.UpdateNugetsInSolution()
+-- update all nugets in the solution
+function M.update_nugets_in_solution()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
 
@@ -132,15 +133,15 @@ function M.UpdateNugetsInSolution()
 		::continue::
 	end
 
-	async.HandleNugetsInProject("Update", all_projects_and_nugets)
+	async.handle_nugets_in_project("Update", all_projects_and_nugets)
 end
 
 -- Function to add or remove project reference
-function M.AddProjectReference()
+function M.add_project_reference()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local choice = picker.AskUserForChoice(projects)
-	local projectToAddTo = choice
+	local choice = picker.ask_user_for_choice(projects)
+	local project_to_add_to = choice
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -150,14 +151,14 @@ function M.AddProjectReference()
 
 	-- remove the project we are adding to from the list of projects to add
 	for i, v in ipairs(projects) do
-		if v == projectToAddTo then
+		if v == project_to_add_to then
 			table.remove(projects, i)
 			break
 		end
 	end
 
 	-- ask user for project to add
-	choice = picker.AskUserForChoice(projects)
+	choice = picker.ask_user_for_choice(projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -166,15 +167,15 @@ function M.AddProjectReference()
 	end
 
 	-- add project to project
-	async.HandleProjectReference("add", projectToAddTo, choice)
+	async.handle_project_reference("add", project_to_add_to, choice)
 end
 
 -- remove project from project
-function M.RemoveProjectReference()
+function M.remove_project_reference()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local choice = picker.AskUserForChoice(projects)
-	local projectToRemoveFrom = choice
+	local choice = picker.ask_user_for_choice(projects)
+	local project_to_remove_from = choice
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -183,12 +184,12 @@ function M.RemoveProjectReference()
 	end
 
 	-- get all project references for the selected project
-	local project_references = utils.get_project_references(projectToRemoveFrom)
+	local project_references = utils.get_project_references(project_to_remove_from)
 
 	print(vim.inspect(project_references))
 
 	-- ask user for project to remove
-	choice = picker.AskUserForChoice(project_references)
+	choice = picker.ask_user_for_choice(project_references)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -197,26 +198,26 @@ function M.RemoveProjectReference()
 	end
 
 	-- remove project from project
-	async.HandleProjectReference("remove", projectToRemoveFrom, choice)
+	async.handle_project_reference("remove", project_to_remove_from, choice)
 end
 
 -- add project to solution
-function M.AddProjectToSolution()
+function M.add_project_to_solution()
 	-- get all projects in the solution folder and in the solution respectively
-	local allCsprojFiles = utils.get_all_projects_in_solution_folder_not_in_solution()
-	local projectsInSolution = utils.get_all_projects_in_solution()
+	local all_csproj_files = utils.get_all_projects_in_solution_folder_not_in_solution()
+	local projects_in_solution = utils.get_all_projects_in_solution()
 
-	local projectsNotInSolution = {}
+	local projects_not_in_solution = {}
 
 	-- find all csproj files that are not in the solution
-	for _, csprojFile in ipairs(allCsprojFiles) do
-		if not utils.has_value(projectsInSolution, csprojFile) then
-			table.insert(projectsNotInSolution, csprojFile)
+	for _, csproj_file in ipairs(all_csproj_files) do
+		if not utils.has_value(projects_in_solution, csproj_file) then
+			table.insert(projects_not_in_solution, csproj_file)
 		end
 	end
 
 	-- ask user for project to add to solution
-	local choice = picker.AskUserForChoice(projectsNotInSolution)
+	local choice = picker.ask_user_for_choice(projects_not_in_solution)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -225,7 +226,7 @@ function M.AddProjectToSolution()
 	end
 
 	-- add project to solution
-	async.AddProjectToSolution(choice)
+	async.add_project_to_solution(choice)
 end
 
 return M
