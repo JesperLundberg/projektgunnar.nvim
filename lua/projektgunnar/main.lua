@@ -216,6 +216,11 @@ function M.add_project_to_solution()
 		end
 	end
 
+	if not projects_not_in_solution then
+		vim.notify("No csproj files that are not already in solution", vim.log.levels.ERROR)
+		return
+	end
+
 	-- ask user for project to add to solution
 	local choice = picker.ask_user_for_choice(projects_not_in_solution)
 
