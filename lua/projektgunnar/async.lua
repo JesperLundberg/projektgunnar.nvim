@@ -75,7 +75,7 @@ end
 -- Function to add or update nugets in/to project
 -- @param action string
 -- @param command_and_nugets table
-function M.HandleNugetsInProject(action, command_and_nugets)
+function M.handle_nugets_in_project(action, command_and_nugets)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
 
@@ -99,7 +99,7 @@ end
 -- @param action string
 -- @param project_path string
 -- @param project_reference_path string
-function M.HandleProjectReference(action, project_path, project_reference_path)
+function M.handle_project_reference(action, project_path, project_reference_path)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
 
@@ -139,7 +139,7 @@ end
 
 -- Function to add project to solution
 -- @param project_to_add_path string
-function M.AddProjectToSolution(project_to_add_path)
+function M.add_project_to_solution(project_to_add_path)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
 
