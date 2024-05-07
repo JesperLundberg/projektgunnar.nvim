@@ -92,8 +92,6 @@ describe("utils", function()
 				"folder/not_in_sln_project2.csproj",
 				"folder2/test/not_in_sln_project3.csproj",
 			})
-
-			mock.revert(fn)
 		end)
 	end)
 
@@ -117,8 +115,6 @@ describe("utils", function()
 				"project2.csproj",
 				"project3.csproj",
 			})
-
-			mock.revert(fn)
 		end)
 
 		it("should return all projects in the solution when there are no projects", function()
@@ -133,8 +129,6 @@ describe("utils", function()
 
 			local result = utils.get_all_projects_in_solution()
 			assert.are.same(result, {})
-
-			mock.revert(fn)
 		end)
 	end)
 
