@@ -1,7 +1,6 @@
 local assert = require("luassert")
 
--- import the luassert.mock module
-local mock = require("luassert.mock")
+-- import the luassert.stub module
 local stub = require("luassert.stub")
 
 describe("utils", function()
@@ -75,10 +74,22 @@ describe("utils", function()
 	end)
 
 	describe("get_all_projects_in_solution_folder_not_in_solution", function()
-		it("should return all projects that are not already in the solution file", function()
-			-- mock vim.fn
-			local fn = stub(vim.fn, "systemlist")
+		local fn
 
+		-- before each test, stub the vim.fn.systemlist function
+		before_each(function()
+			fn = stub(vim.fn, "systemlist")
+		end)
+
+		-- after each test, revert the stub
+		after_each(function()
+			-- Only revert the stub if it exists
+			if fn then
+				fn:revert()
+			end
+		end)
+
+		it("should return all projects that are not already in the solution file", function()
 			-- set expectation when mocked api call made
 			fn.returns({
 				"./not_in_sln_project1.csproj",
@@ -92,14 +103,29 @@ describe("utils", function()
 				"folder/not_in_sln_project2.csproj",
 				"folder2/test/not_in_sln_project3.csproj",
 			})
+
+			-- revert the stub
+			fn:revert()
 		end)
 	end)
 
 	describe("get_all_projects_in_solution", function()
-		it("should return all projects in the solution", function()
-			-- mock vim.fn
-			local fn = stub(vim.fn, "systemlist")
+		local fn
 
+		-- before each test, stub the vim.fn.systemlist function
+		before_each(function()
+			fn = stub(vim.fn, "systemlist")
+		end)
+
+		-- after each test, revert the stub
+		after_each(function()
+			-- Only revert the stub if it exists
+			if fn then
+				fn:revert()
+			end
+		end)
+
+		it("should return all projects in the solution", function()
 			-- set expectation when mocked api call made
 			fn.returns({
 				"Projects",
@@ -118,9 +144,6 @@ describe("utils", function()
 		end)
 
 		it("should return all projects in the solution when there are no projects", function()
-			-- mock vim.fn
-			local fn = stub(vim.fn, "systemlist")
-
 			-- set expectation when mocked api call made
 			fn.returns({
 				"Projects",

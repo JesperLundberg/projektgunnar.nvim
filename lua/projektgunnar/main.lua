@@ -7,11 +7,8 @@ local M = {}
 
 -- add nuget to project
 function M.add_nuget_to_project()
-	print("In the start")
 	-- ask user for nuget to add
 	local nuget_to_add = vim.fn.input("Nuget to add: ")
-
-	print("after nuget_to_add")
 
 	-- if the user did not select a nuget, return
 	if nuget_to_add == "" then
