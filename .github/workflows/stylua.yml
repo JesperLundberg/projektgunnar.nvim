@@ -15,9 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     name: style
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@main
 
-      - uses: JohnnyMorganz/stylua-action@v2
+      - uses: JohnnyMorganz/stylua-action@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: latest
