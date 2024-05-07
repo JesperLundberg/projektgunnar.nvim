@@ -120,5 +120,33 @@ describe("utils", function()
 
 			mock.revert(fn)
 		end)
+
+		it("should return all projects in the solution when there are no projects", function()
+			-- mock vim.fn
+			local fn = stub(vim.fn, "systemlist")
+
+			-- set expectation when mocked api call made
+			fn.returns({
+				"Projects",
+				"----------",
+			})
+
+			local result = utils.get_all_projects_in_solution()
+			assert.are.same(result, {})
+
+			mock.revert(fn)
+		end)
+	end)
+
+	describe("prequire", function()
+		it("should return the module if it exists", function()
+			local result = utils.prequire("lua.projektgunnar.utils")
+			assert.are.same(result, utils)
+		end)
+
+		it("should return nil if the module does not exist", function()
+			local result = utils.prequire("lua.projektgunnar.utils2")
+			assert.is_nil(result)
+		end)
 	end)
 end)
