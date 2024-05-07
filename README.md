@@ -48,6 +48,14 @@ dependencies = {
 
 #### TODO
 
+#### Local development
+
+To run tests:
+
+```bash
+nvim --headless --noplugin -u tests/minimal.vim -c "PlenaryBustedDirectory tests/ {minimal_init = 'tests/minimal.vim'}"
+```
+
 #### Credits
 
 [Issafalcon](https://github.com/Issafalcon/) - for being patient with questions and giving me clues on what to look into.
