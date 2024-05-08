@@ -9,6 +9,7 @@ local sut = require("lua.projektgunnar.main")
 local utils = require("projektgunnar.utils")
 local picker = require("projektgunnar.picker")
 local async = require("projektgunnar.async")
+local nugets = require("projektgunnar.nugets")
 
 describe("main", function()
 	local vim_input_stub
@@ -16,6 +17,8 @@ describe("main", function()
 
 	local utils_get_all_projects_in_solution_stub
 	local picker_ask_user_for_choice_stub
+	local async_handle_nugets_in_project
+	local nugets_all_nugets_stub
 
 	before_each(function()
 		-- Stub `vim.fn.input` and `vim.notify`
@@ -26,6 +29,7 @@ describe("main", function()
 		utils_get_all_projects_in_solution_stub = stub(utils, "get_all_projects_in_solution")
 		picker_ask_user_for_choice_stub = stub(picker, "ask_user_for_choice")
 		async_handle_nugets_in_project = stub(async, "handle_nugets_in_project")
+		nugets_all_nugets_stub = stub(nugets, "all_nugets")
 	end)
 
 	after_each(function()
@@ -94,6 +98,78 @@ describe("main", function()
 					items = { "Moq" },
 				},
 			})
+		end)
+	end)
+
+	describe("remove_nuget_from_project", function()
+		it("should give an error if there are no projects in the solution", function()
+			-- Stub utils.get_all_projects_in_solution to return an empty list
+			utils_get_all_projects_in_solution_stub.returns({})
+
+			-- Call the function in main
+			sut.remove_nuget_from_project()
+
+			-- Assert that vim.notify was called with the expected arguments
+			assert.stub(vim_notify_stub).was_called_with("No projects in solution", vim.log.levels.ERROR)
+		end)
+
+		it("should give an error if no project is selected", function()
+			-- Stub utils.get_all_projects_in_solution to return a list of projects
+			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
+
+			-- Stub picker.ask_user_for_choice to return an empty string to indicate no choice made
+			picker_ask_user_for_choice_stub.returns()
+
+			-- Call the function in main
+			sut.remove_nuget_from_project()
+
+			-- Assert that vim.notify was called with the expected arguments
+			assert.stub(vim_notify_stub).was_called_with("No project chosen", vim.log.levels.ERROR)
+		end)
+
+		it("should give a warning if there are no NuGets in the project", function()
+			-- Stub utils.get_all_projects_in_solution to return a list of projects
+			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
+
+			-- Stub picker.ask_user_for_choice to return a project
+			picker_ask_user_for_choice_stub.returns("proj1")
+
+			-- Stub nugets.all_nugets to return an empty list
+			nugets_all_nugets_stub.returns({})
+
+			-- Call the function in main
+			sut.remove_nuget_from_project()
+
+			-- Assert that vim.notify was called with the expected arguments
+			assert.stub(vim_notify_stub).was_called_with("No nugets in project proj1", vim.log.levels.WARN)
+		end)
+
+		it("should give a warning if no NuGets are selected for removal by the user", function()
+			-- Stub utils.get_all_projects_in_solution to return a list of projects
+			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
+
+			local call_count = 0
+
+			-- Define custom behavior for the stub
+			local my_stub = stub(picker, "ask_user_for_choice", function()
+				call_count = call_count + 1
+				if call_count == 1 then
+					return "proj1"
+				else
+					return
+				end
+			end)
+
+			-- Stub nugets.all_nugets to return a list of NuGets
+			nugets_all_nugets_stub.returns({ "Moq", "NUnit" })
+
+			-- Call the function in main
+			sut.remove_nuget_from_project()
+
+			-- Assert that vim.notify was called with the expected arguments
+			assert.stub(vim_notify_stub).was_called_with("No nuget chosen", vim.log.levels.WARN)
+
+			my_stub:revert()
 		end)
 	end)
 end)
