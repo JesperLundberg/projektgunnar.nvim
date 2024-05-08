@@ -103,9 +103,6 @@ describe("utils", function()
 				"folder/not_in_sln_project2.csproj",
 				"folder2/test/not_in_sln_project3.csproj",
 			})
-
-			-- revert the stub
-			fn:revert()
 		end)
 	end)
 
