@@ -18,6 +18,14 @@ function M.add_nuget_to_project()
 
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
+
+	-- If there are no projects in the solution, notify the user and return
+	if #projects == 0 then
+		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		return
+	end
+
+	-- ask user for project to add nuget to
 	local choice = picker.ask_user_for_choice(projects)
 
 	-- if the user did not select a project, return
@@ -39,6 +47,14 @@ end
 function M.remove_nuget_from_project()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
+
+	-- If there are no projects in the solution, notify the user and return
+	if #projects == 0 then
+		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		return
+	end
+
+	-- ask user for project to add nuget to
 	local choice = picker.ask_user_for_choice(projects)
 
 	-- if the user did not select a project, return
