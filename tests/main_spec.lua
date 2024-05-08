@@ -148,6 +148,7 @@ describe("main", function()
 			-- Stub utils.get_all_projects_in_solution to return a list of projects
 			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
 
+			-- Enable ask_user_for_choice to be called twice with different return values
 			local call_count = 0
 
 			-- Define custom behavior for the stub
