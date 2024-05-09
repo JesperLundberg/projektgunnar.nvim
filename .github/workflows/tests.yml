@@ -35,7 +35,6 @@ jobs:
       - name: Prepare dependency mini.pick
         run: |
           git clone --depth 1 https://github.com/echasnovski/mini.pick ~/.local/share/nvim/site/pack/vendor/start/mini.pick
-          # ln -s "$(pwd)" ~/.local/share/nvim/site/pack/vendor/start
 
       - name: Setup neovim
         uses: rhysd/action-setup-vim@v1

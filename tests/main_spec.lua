@@ -19,6 +19,7 @@ describe("main", function()
 	local picker_ask_user_for_choice_stub
 	local async_handle_nugets_in_project
 	local nugets_all_nugets_stub
+	local nugets_outdated_nugets_stub
 
 	before_each(function()
 		-- Stub `vim.fn.input` and `vim.notify`
@@ -30,6 +31,7 @@ describe("main", function()
 		picker_ask_user_for_choice_stub = stub(picker, "ask_user_for_choice")
 		async_handle_nugets_in_project = stub(async, "handle_nugets_in_project")
 		nugets_all_nugets_stub = stub(nugets, "all_nugets")
+		nugets_outdated_nugets_stub = stub(nugets, "outdated_nugets")
 	end)
 
 	after_each(function()
@@ -45,6 +47,15 @@ describe("main", function()
 		end
 		if picker_ask_user_for_choice_stub then
 			picker_ask_user_for_choice_stub:revert()
+		end
+		if async_handle_nugets_in_project then
+			async_handle_nugets_in_project:revert()
+		end
+		if nugets_all_nugets_stub then
+			nugets_all_nugets_stub:revert()
+		end
+		if nugets_outdated_nugets_stub then
+			nugets_outdated_nugets_stub:revert()
 		end
 	end)
 	-- Start the test suite for `add_nuget_to_project`
@@ -169,6 +180,79 @@ describe("main", function()
 
 			-- Assert that vim.notify was called with the expected arguments
 			assert.stub(vim_notify_stub).was_called_with("No nuget chosen", vim.log.levels.WARN)
+
+			my_stub:revert()
+		end)
+
+		it("should call async.handle_nugets_in_project with the correct arguments", function()
+			-- Stub utils.get_all_projects_in_solution to return a list of projects
+			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
+
+			-- Enable ask_user_for_choice to be called twice with different return values
+			local call_count = 0
+
+			-- Define custom behavior for the stub
+			local my_stub = stub(picker, "ask_user_for_choice", function()
+				call_count = call_count + 1
+				if call_count == 1 then
+					return "proj1"
+				else
+					return "Moq"
+				end
+			end)
+
+			-- Stub nugets.all_nugets to return a list of NuGets
+			nugets_all_nugets_stub.returns({ "Moq", "NUnit" })
+
+			-- Call the function in main
+			sut.remove_nuget_from_project()
+
+			-- Assert that async.handle_nugets_in_project was called with the correct arguments
+			assert.stub(async_handle_nugets_in_project).was_called_with("Remove", {
+				{
+					project = "proj1",
+					command = "dotnet remove proj1 package ",
+					items = { "Moq" },
+				},
+			})
+
+			my_stub:revert()
+		end)
+	end)
+
+	describe("update_nugets_in_project", function()
+		it("should give an error if no project is selected", function()
+			-- Stub utils.get_all_projects_in_solution to return an empty list
+			utils_get_all_projects_in_solution_stub.returns({})
+
+			-- Call the function in main
+			sut.update_nugets_in_project()
+
+			-- Assert that vim.notify was called with the expected arguments
+			assert.stub(vim_notify_stub).was_called_with("No project chosen", vim.log.levels.ERROR)
+		end)
+
+		it("should call async.handle_nugets_in_project with the correct arguments", function()
+			-- Stub utils.get_all_projects_in_solution to return a list of projects
+			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
+
+			-- Define custom behavior for the stub
+			local my_stub = stub(picker, "ask_user_for_choice").returns("proj1")
+
+			-- Stub nugets.outdated_nugets to return an a list
+			nugets_outdated_nugets_stub.returns({ "Moq", "NUnit" })
+
+			-- Call the function in main
+			sut.update_nugets_in_project()
+
+			-- Assert that async.handle_nugets_in_project was called with the correct arguments
+			assert.stub(async_handle_nugets_in_project).was_called_with("Update", {
+				{
+					project = "proj1",
+					command = "dotnet add proj1 package ",
+					items = { "Moq", "NUnit" },
+				},
+			})
 
 			my_stub:revert()
 		end)
