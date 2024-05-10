@@ -18,6 +18,14 @@ function M.add_nuget_to_project()
 
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
+
+	-- If there are no projects in the solution, notify the user and return
+	if #projects == 0 then
+		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		return
+	end
+
+	-- ask user for project to add nuget to
 	local choice = picker.ask_user_for_choice(projects)
 
 	-- if the user did not select a project, return
@@ -39,6 +47,14 @@ end
 function M.remove_nuget_from_project()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
+
+	-- If there are no projects in the solution, notify the user and return
+	if #projects == 0 then
+		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		return
+	end
+
+	-- ask user for project to add nuget to
 	local choice = picker.ask_user_for_choice(projects)
 
 	-- if the user did not select a project, return
@@ -140,6 +156,13 @@ end
 function M.add_project_reference()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
+
+	-- If there are no projects in the solution, notify the user and return
+	if #projects == 0 then
+		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		return
+	end
+
 	local choice = picker.ask_user_for_choice(projects)
 	local project_to_add_to = choice
 
@@ -174,6 +197,13 @@ end
 function M.remove_project_reference()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
+
+	-- If there are no projects in the solution, notify the user and return
+	if #projects == 0 then
+		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		return
+	end
+
 	local choice = picker.ask_user_for_choice(projects)
 	local project_to_remove_from = choice
 
@@ -185,8 +215,6 @@ function M.remove_project_reference()
 
 	-- get all project references for the selected project
 	local project_references = utils.get_project_references(project_to_remove_from)
-
-	print(vim.inspect(project_references))
 
 	-- ask user for project to remove
 	choice = picker.ask_user_for_choice(project_references)
@@ -217,7 +245,7 @@ function M.add_project_to_solution()
 	end
 
 	if not projects_not_in_solution then
-		vim.notify("No csproj files that are not already in solution", vim.log.levels.ERROR)
+		vim.notify("No csproj files that are not already in solution", vim.log.levels.WARN)
 		return
 	end
 

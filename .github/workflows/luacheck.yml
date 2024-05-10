@@ -15,9 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     name: lint
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@main
 
-      - uses: lunarmodules/luacheck@v1.1.2
+      - uses: lunarmodules/luacheck@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: latest

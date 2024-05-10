@@ -55,6 +55,10 @@ end
 -- @param val string
 -- @return bool
 function M.has_value(tab, val)
+	if tab == nil then
+		return false
+	end
+
 	for _, value in ipairs(tab) do
 		if value == val then
 			return true
