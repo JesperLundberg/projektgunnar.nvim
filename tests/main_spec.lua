@@ -12,13 +12,16 @@ local async = require("projektgunnar.async")
 local nugets = require("projektgunnar.nugets")
 
 describe("main", function()
+	-- Define stub variables
 	local vim_input_stub
 	local vim_notify_stub
 
 	local utils_get_all_projects_in_solution_stub
+	local utils_get_all_projects_in_solution_folder_not_in_solution
 	local picker_ask_user_for_choice_stub
 	local async_handle_nugets_in_project
 	local async_handle_project_reference
+	local async_add_project_to_solution
 	local nugets_all_nugets_stub
 	local nugets_outdated_nugets_stub
 
@@ -29,9 +32,12 @@ describe("main", function()
 
 		-- Stubbing your own code
 		utils_get_all_projects_in_solution_stub = stub(utils, "get_all_projects_in_solution")
+		utils_get_all_projects_in_solution_folder_not_in_solution =
+			stub(utils, "get_all_projects_in_solution_folder_not_in_solution")
 		picker_ask_user_for_choice_stub = stub(picker, "ask_user_for_choice")
 		async_handle_nugets_in_project = stub(async, "handle_nugets_in_project")
 		async_handle_project_reference = stub(async, "handle_project_reference")
+		async_add_project_to_solution = stub(async, "add_project_to_solution")
 		nugets_all_nugets_stub = stub(nugets, "all_nugets")
 		nugets_outdated_nugets_stub = stub(nugets, "outdated_nugets")
 	end)
@@ -47,11 +53,20 @@ describe("main", function()
 		if utils_get_all_projects_in_solution_stub then
 			utils_get_all_projects_in_solution_stub:revert()
 		end
+		if utils_get_all_projects_in_solution_folder_not_in_solution then
+			utils_get_all_projects_in_solution_folder_not_in_solution:revert()
+		end
 		if picker_ask_user_for_choice_stub then
 			picker_ask_user_for_choice_stub:revert()
 		end
 		if async_handle_nugets_in_project then
 			async_handle_nugets_in_project:revert()
+		end
+		if async_handle_project_reference then
+			async_handle_project_reference:revert()
+		end
+		if async_add_project_to_solution then
+			async_add_project_to_solution:revert()
 		end
 		if nugets_all_nugets_stub then
 			nugets_all_nugets_stub:revert()
@@ -60,7 +75,7 @@ describe("main", function()
 			nugets_outdated_nugets_stub:revert()
 		end
 	end)
-	-- Start the test suite for `add_nuget_to_project`
+
 	describe("add_nuget_to_project", function()
 		it("should give an error if no NuGet is selected", function()
 			-- Stub `input` to return an empty string
@@ -165,7 +180,7 @@ describe("main", function()
 			local call_count = 0
 
 			-- Define custom behavior for the stub
-			local my_stub = stub(picker, "ask_user_for_choice", function()
+			local ask_user_for_choice_stub_two_returns = stub(picker, "ask_user_for_choice", function()
 				call_count = call_count + 1
 				if call_count == 1 then
 					return "proj1"
@@ -183,7 +198,7 @@ describe("main", function()
 			-- Assert that vim.notify was called with the expected arguments
 			assert.stub(vim_notify_stub).was_called_with("No nuget chosen", vim.log.levels.WARN)
 
-			my_stub:revert()
+			ask_user_for_choice_stub_two_returns:revert()
 		end)
 
 		it("should call async.handle_nugets_in_project with the correct arguments", function()
@@ -194,7 +209,7 @@ describe("main", function()
 			local call_count = 0
 
 			-- Define custom behavior for the stub
-			local my_stub = stub(picker, "ask_user_for_choice", function()
+			local ask_user_for_choice_stub_two_returns = stub(picker, "ask_user_for_choice", function()
 				call_count = call_count + 1
 				if call_count == 1 then
 					return "proj1"
@@ -218,7 +233,7 @@ describe("main", function()
 				},
 			})
 
-			my_stub:revert()
+			ask_user_for_choice_stub_two_returns:revert()
 		end)
 	end)
 
@@ -309,7 +324,7 @@ describe("main", function()
 			local call_count = 0
 
 			-- Stub picker.ask_user_for_choice to return a project
-			local my_stub = stub(picker, "ask_user_for_choice", function()
+			local ask_user_for_choice_stub_two_returns = stub(picker, "ask_user_for_choice", function()
 				call_count = call_count + 1
 				if call_count == 1 then
 					return "proj1"
@@ -325,7 +340,7 @@ describe("main", function()
 			assert.stub(vim_notify_stub).was_called_with("No project chosen", vim.log.levels.ERROR)
 
 			-- Revert the stub
-			my_stub:revert()
+			ask_user_for_choice_stub_two_returns:revert()
 		end)
 
 		it("should call async.handle_project_reference with the correct arguments", function()
@@ -336,7 +351,7 @@ describe("main", function()
 			local call_count = 0
 
 			-- Stub picker.ask_user_for_choice to return a project
-			local my_stub = stub(picker, "ask_user_for_choice", function()
+			local ask_user_for_choice_stub_two_returns = stub(picker, "ask_user_for_choice", function()
 				call_count = call_count + 1
 				if call_count == 1 then
 					return "proj1"
@@ -351,7 +366,7 @@ describe("main", function()
 			-- Assert that async.handle_nugets_in_project was called with the correct arguments
 			assert.stub(async_handle_project_reference).was_called_with("add", "proj1", "proj2")
 
-			my_stub:revert()
+			ask_user_for_choice_stub_two_returns:revert()
 		end)
 	end)
 
@@ -389,7 +404,7 @@ describe("main", function()
 			local call_count = 0
 
 			-- Stub picker.ask_user_for_choice to return a project
-			local my_stub = stub(picker, "ask_user_for_choice", function()
+			local ask_user_for_choice_stub_two_returns = stub(picker, "ask_user_for_choice", function()
 				call_count = call_count + 1
 				if call_count == 1 then
 					return "proj1"
@@ -404,7 +419,52 @@ describe("main", function()
 			-- Assert that async.handle_nugets_in_project was called with the correct arguments
 			assert.stub(async_handle_project_reference).was_called_with("remove", "proj1", "proj2")
 
-			my_stub:revert()
+			ask_user_for_choice_stub_two_returns:revert()
+		end)
+	end)
+
+	describe("add_project_to_solution", function()
+		it("should give an error if no project is selected", function()
+			-- Stub `get_all_projects_in_solution_folder_not_in_solution` to return an empty list
+			-- Stub `get_all_projects_in_solution` to return a list
+			utils_get_all_projects_in_solution_folder_not_in_solution.returns({})
+			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
+
+			-- Call the function in `main`
+			sut.add_project_to_solution()
+
+			-- Assert the expected result
+			assert.stub(vim_notify_stub).was_called_with("No project chosen", vim.log.levels.ERROR)
+		end)
+
+		it("should give an error if no project is chosen to be added to solution", function()
+			-- Stub `get_all_projects_in_solution_folder_not_in_solution` to return a list
+			utils_get_all_projects_in_solution_folder_not_in_solution.returns({ "proj1" })
+			-- Stub `get_all_projects_in_solution` to return a list that does not contain the above project
+			utils_get_all_projects_in_solution_stub.returns({ "proj2", "proj3" })
+			-- Stub `picker.ask_user_for_choice` to return an empty string
+			picker_ask_user_for_choice_stub.returns()
+
+			-- Call the function in `main`
+			sut.add_project_to_solution()
+
+			-- Assert that async.handle_nugets_in_project was called with the correct arguments
+			assert.stub(vim_notify_stub).was_called_with("No project chosen", vim.log.levels.ERROR)
+		end)
+
+		it("should call async.handle_project_reference with the correct arguments", function()
+			-- Stub `get_all_projects_in_solution_folder_not_in_solution` to return a list
+			utils_get_all_projects_in_solution_folder_not_in_solution.returns({ "proj1" })
+			-- Stub `get_all_projects_in_solution` to return a list that does not contain the above project
+			utils_get_all_projects_in_solution_stub.returns({ "proj2", "proj3" })
+			-- Stub `picker.ask_user_for_choice` to return a project
+			picker_ask_user_for_choice_stub.returns("proj1")
+
+			-- Call the function in `main`
+			sut.add_project_to_solution()
+
+			-- Assert that async.handle_nugets_in_project was called with the correct arguments
+			assert.stub(async_add_project_to_solution).was_called_with("proj1")
 		end)
 	end)
 end)
