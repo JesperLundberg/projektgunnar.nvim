@@ -245,7 +245,7 @@ function M.add_project_to_solution()
 	end
 
 	if not projects_not_in_solution then
-		vim.notify("No csproj files that are not already in solution", vim.log.levels.ERROR)
+		vim.notify("No csproj files that are not already in solution", vim.log.levels.WARN)
 		return
 	end
 

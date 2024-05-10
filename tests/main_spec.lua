@@ -323,9 +323,12 @@ describe("main", function()
 
 			-- Assert that vim.notify was called with the expected arguments
 			assert.stub(vim_notify_stub).was_called_with("No project chosen", vim.log.levels.ERROR)
+
+			-- Revert the stub
+			my_stub:revert()
 		end)
 
-		it("should call async.handle_nugets_in_project with the correct arguments", function()
+		it("should call async.handle_project_reference with the correct arguments", function()
 			-- Stub utils.get_all_projects_in_solution to return a list of projects
 			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
 
@@ -347,6 +350,59 @@ describe("main", function()
 
 			-- Assert that async.handle_nugets_in_project was called with the correct arguments
 			assert.stub(async_handle_project_reference).was_called_with("add", "proj1", "proj2")
+
+			my_stub:revert()
+		end)
+	end)
+
+	describe("remove_project_reference", function()
+		it("should give an error if no projects exist in solution", function()
+			-- Stub utils.get_all_projects_in_solution to return an empty list
+			utils_get_all_projects_in_solution_stub.returns({})
+
+			-- Call the function in main
+			sut.remove_project_reference()
+
+			-- Assert that vim.notify was called with the expected arguments
+			assert.stub(vim_notify_stub).was_called_with("No projects in solution", vim.log.levels.ERROR)
+		end)
+
+		it("should give an error if no project is selected", function()
+			-- Stub utils.get_all_projects_in_solution to return a list of projects
+			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
+
+			-- Stub picker.ask_user_for_choice to return an empty string to indicate no choice made
+			picker_ask_user_for_choice_stub.returns()
+
+			-- Call the function in main
+			sut.remove_project_reference()
+
+			-- Assert that vim.notify was called with the expected arguments
+			assert.stub(vim_notify_stub).was_called_with("No project chosen", vim.log.levels.ERROR)
+		end)
+
+		it("should call async.handle_project_reference with the correct arguments", function()
+			-- Stub utils.get_all_projects_in_solution to return a list of projects
+			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
+
+			-- Enable ask_user_for_choice to be called twice with different return values
+			local call_count = 0
+
+			-- Stub picker.ask_user_for_choice to return a project
+			local my_stub = stub(picker, "ask_user_for_choice", function()
+				call_count = call_count + 1
+				if call_count == 1 then
+					return "proj1"
+				else
+					return "proj2"
+				end
+			end)
+
+			-- Call the function in main
+			sut.remove_project_reference()
+
+			-- Assert that async.handle_nugets_in_project was called with the correct arguments
+			assert.stub(async_handle_project_reference).was_called_with("remove", "proj1", "proj2")
 
 			my_stub:revert()
 		end)
