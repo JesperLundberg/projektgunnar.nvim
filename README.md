@@ -8,9 +8,6 @@ Gunnar is the nice old Swedish man who helps you add projects or packages to dot
 
 #### Why?
 
-> [!NOTE]
-> This is a work in progress.
-
 Everytime I wanted to add nugets, references to other projects or add a project to the solution I had to spend some time getting the dotnet commands right. It started to annoy me and so the idea of a plugin was born. This is a plugin that helps with those commands and allows you to run them from inside neovim without using a terminal.
 
 #### Required system dependencies
@@ -35,6 +32,15 @@ dependencies = {
 ```
 
 #### Available commands
+
+The way to use these commands has changed from the plugins inception.
+Now there is only the `ProjektGunnar` command that is supplied with the following commands.
+
+Example (to add nuget to project):
+
+```
+:ProjektGunnar AddNugetToProject
+```
 
 | Command                  | Description                                      |
 | ------------------------ | ------------------------------------------------ |
