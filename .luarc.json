@@ -1,6 +1,11 @@
 {
-    "diagnostics.globals": [
-        "vim",
-        "describe"
-    ]
+  "diagnostics.globals": [
+    "vim",
+    "describe",
+    "it",
+    "expect",
+    "before_each",
+    "after_each"
+  ]
 }
+
