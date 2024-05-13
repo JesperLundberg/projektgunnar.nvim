@@ -1,33 +1,41 @@
-local main = require("projektgunnar.main")
+-- Available commands for ProjektGunnar
+local commands = {
+	["AddNugetToProject"] = function()
+		require("projektgunnar.main").add_nuget_to_project()
+	end,
+	["RemoveNugetFromProject"] = function()
+		require("projektgunnar.main").remove_nuget_from_project()
+	end,
+	["UpdateNugetsInProject"] = function()
+		require("projektgunnar.main").update_nugets_in_project()
+	end,
+	["UpdateNugetsInSolution"] = function()
+		require("projektgunnar.main").update_nugets_in_solution()
+	end,
+	["AddProjectToProject"] = function()
+		require("projektgunnar.main").add_project_reference()
+	end,
+	["RemoveProjectFromProject"] = function()
+		require("projektgunnar.main").remove_project_reference()
+	end,
+	["AddProjectToSolution"] = function()
+		require("projektgunnar.main").add_project_to_solution()
+	end,
+}
 
-vim.api.nvim_create_user_command(
-	"AddProjectToSolution",
-	main.add_project_to_solution,
-	{ desc = "Add project to solution" }
-)
-vim.api.nvim_create_user_command("AddNugetToProject", main.add_nuget_to_project, { desc = "Add Nuget to Project" })
-vim.api.nvim_create_user_command(
-	"RemoveNugetFromProject",
-	main.remove_nuget_from_project,
-	{ desc = "Remove Nuget from Project" }
-)
-vim.api.nvim_create_user_command(
-	"UpdateNugetsInProject",
-	main.update_nugets_in_project,
-	{ desc = "Update Nugets in Project" }
-)
-vim.api.nvim_create_user_command(
-	"UpdateNugetsInSolution",
-	main.update_nugets_in_solution,
-	{ desc = "Update Nugets in Solution" }
-)
-vim.api.nvim_create_user_command(
-	"AddProjectToProject",
-	main.add_project_reference,
-	{ desc = "Add one project as a reference to another" }
-)
-vim.api.nvim_create_user_command(
-	"RemoveProjectFromProject",
-	main.remove_project_reference,
-	{ desc = "Remove one project reference from a project" }
-)
+local function tab_completion(_, _, _)
+	-- Tab completion for ProjektGunnar
+	local tab_commands = {}
+
+	-- Loop through the commands and add the key value to the tab completion
+	for k, _ in pairs(commands) do
+		table.insert(tab_commands, k)
+	end
+
+	return tab_commands
+end
+
+vim.api.nvim_create_user_command("ProjektGunnar", function(opts)
+	-- If the command exists then run the corresponding function
+	commands[opts.args]()
+end, { nargs = "*", complete = tab_completion, desc = "ProjektGunnar plugin" })
