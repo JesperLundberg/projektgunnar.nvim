@@ -5,7 +5,9 @@ local M = {}
 -- Method to center a string in a window
 -- @param str string
 local function center(str)
+	-- Get the width of the current window
 	local width = api.nvim_win_get_width(0)
+	-- Calculate the shift needed to center the string
 	local shift = math.floor(width / 2) - math.floor(string.len(str) / 2)
 	return string.rep(" ", shift) .. str
 end
@@ -17,6 +19,7 @@ function M.open()
 	local buf = api.nvim_create_buf(false, true)
 	local border_buf = api.nvim_create_buf(false, true)
 
+	-- Set the buffer to be a temporary buffer that will be deleted when it is no longer in use
 	api.nvim_buf_set_option(buf, "bufhidden", "wipe")
 	api.nvim_buf_set_option(buf, "filetype", "ProjektGunnar")
 
