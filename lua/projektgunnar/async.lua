@@ -22,7 +22,7 @@ end
 local function create_async_task(command_and_items, win, buf)
 	return coroutine.create(function()
 		-- loop through the command and item table
-		for i, command_and_item in ipairs(command_and_items) do
+		for commandIndex, command_and_item in ipairs(command_and_items) do
 			-- assert command and nugets variables so they are not nil
 			assert(command_and_item.command, "command_and_item.command is nil")
 			assert(command_and_item.items, "command_and_item.items is nil")
@@ -31,10 +31,10 @@ local function create_async_task(command_and_items, win, buf)
 			local total_nugets = #command_and_item.items
 
 			-- Print progress
-			floating_window.update_progress(win, buf, i, total_commands)
+			floating_window.update_progress(win, buf, commandIndex, total_commands)
 
 			-- Loop through all nugets and update them
-			for j, item_to_add in ipairs(command_and_item.items) do
+			for nugetIndex, item_to_add in ipairs(command_and_item.items) do
 				-- Construct the dotnet command
 				local dotnet_command = command_and_item.command .. item_to_add
 
@@ -51,7 +51,7 @@ local function create_async_task(command_and_items, win, buf)
 						end
 
 						-- Update buffer with success/failure information
-						floating_window.update(win, buf, j, total_nugets, success, dotnet_command)
+						floating_window.update(win, buf, nugetIndex, total_nugets, success, dotnet_command)
 
 						-- Resume the coroutine for the next iteration
 						coroutine.resume(async_task, win, buf)
@@ -63,7 +63,7 @@ local function create_async_task(command_and_items, win, buf)
 			end
 
 			-- when all work is done, update the floating window with a done message
-			if #command_and_items == i then
+			if #command_and_items == commandIndex then
 				floating_window.update_with_done_message(win, buf)
 			end
 		end

@@ -26,7 +26,7 @@ function M.add_nuget_to_project()
 	end
 
 	-- ask user for project to add nuget to
-	local choice = picker.ask_user_for_choice(projects)
+	local choice = picker.ask_user_for_choice("Add to", projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -55,7 +55,7 @@ function M.remove_nuget_from_project()
 	end
 
 	-- ask user for project to add nuget to
-	local choice = picker.ask_user_for_choice(projects)
+	local choice = picker.ask_user_for_choice("Remove from", projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -73,7 +73,7 @@ function M.remove_nuget_from_project()
 	end
 
 	-- ask user for nuget to remove
-	local nuget_to_remove = picker.ask_user_for_choice(all_nugets)
+	local nuget_to_remove = picker.ask_user_for_choice("Remove which", all_nugets)
 
 	-- if the user did not select a nuget, return
 	if not nuget_to_remove then
@@ -94,7 +94,7 @@ end
 function M.update_nugets_in_project()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-	local choice = picker.ask_user_for_choice(projects)
+	local choice = picker.ask_user_for_choice("Update project", projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -163,7 +163,7 @@ function M.add_project_reference()
 		return
 	end
 
-	local choice = picker.ask_user_for_choice(projects)
+	local choice = picker.ask_user_for_choice("Add to", projects)
 	local project_to_add_to = choice
 
 	-- if the user did not select a project, return
@@ -181,7 +181,7 @@ function M.add_project_reference()
 	end
 
 	-- ask user for project to add
-	choice = picker.ask_user_for_choice(projects)
+	choice = picker.ask_user_for_choice("Add", projects)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -204,7 +204,7 @@ function M.remove_project_reference()
 		return
 	end
 
-	local choice = picker.ask_user_for_choice(projects)
+	local choice = picker.ask_user_for_choice("Remove from", projects)
 	local project_to_remove_from = choice
 
 	-- if the user did not select a project, return
@@ -217,7 +217,7 @@ function M.remove_project_reference()
 	local project_references = utils.get_project_references(project_to_remove_from)
 
 	-- ask user for project to remove
-	choice = picker.ask_user_for_choice(project_references)
+	choice = picker.ask_user_for_choice("Remove", project_references)
 
 	-- if the user did not select a project, return
 	if not choice then
@@ -250,7 +250,7 @@ function M.add_project_to_solution()
 	end
 
 	-- ask user for project to add to solution
-	local choice = picker.ask_user_for_choice(projects_not_in_solution)
+	local choice = picker.ask_user_for_choice("Add", projects_not_in_solution)
 
 	-- if the user did not select a project, return
 	if not choice then
