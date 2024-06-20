@@ -20,12 +20,12 @@ function M.open()
 	local border_buf = api.nvim_create_buf(false, true)
 
 	-- Set the buffer to be a temporary buffer that will be deleted when it is no longer in use
-	api.nvim_buf_set_option(buf, "bufhidden", "wipe")
-	api.nvim_buf_set_option(buf, "filetype", "ProjektGunnar")
+	api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
+	api.nvim_set_option_value("filetype", "ProjektGunnar", { buf = buf })
 
 	-- Get dimensions of neovim editor
-	local width = api.nvim_get_option("columns")
-	local height = api.nvim_get_option("lines")
+	local width = api.nvim_get_option_value("columns", { scope = "global" })
+	local height = api.nvim_get_option_value("lines", { scope = "global" })
 
 	-- Calculate our floating window size so its 80% of the editor size
 	local win_height = math.ceil(height * 0.8 - 4)
@@ -75,7 +75,7 @@ end
 
 function M.update_with_done_message(win, buf)
 	-- Make the buffer modifiable
-	api.nvim_buf_set_option(buf, "modifiable", true)
+	api.nvim_set_option_value("modifiable", true, { buf = buf })
 
 	-- Get the current lines in the buffer
 	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
@@ -92,7 +92,7 @@ function M.update_with_done_message(win, buf)
 	api.nvim_buf_set_lines(buf, 0, -1, false, lines_to_write)
 
 	-- Make the buffer unmodifiable
-	api.nvim_buf_set_option(buf, "modifiable", false)
+	api.nvim_set_option_value("modifiable", false, { buf = buf })
 
 	-- Set the cursor to the last line
 	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
@@ -104,7 +104,7 @@ end
 -- @param message string
 function M.print_message(win, buf, message)
 	-- Make the buffer modifiable
-	api.nvim_buf_set_option(buf, "modifiable", true)
+	api.nvim_set_option_value("modifiable", true, { buf = buf })
 
 	-- Add delimiter under the message
 	message = { message, "----------------------------------------" }
@@ -113,7 +113,7 @@ function M.print_message(win, buf, message)
 	api.nvim_buf_set_lines(buf, 2, -1, false, message)
 
 	-- Make the buffer unmodifiable
-	api.nvim_buf_set_option(buf, "modifiable", false)
+	api.nvim_set_option_value("modifiable", false, { buf = buf })
 
 	-- Set the cursor to the last line
 	api.nvim_win_set_cursor(win, { #message, 2 })
@@ -128,7 +128,7 @@ end
 -- @param command_output string
 function M.update(win, buf, index, total, success, command_output)
 	-- Make the buffer modifiable
-	api.nvim_buf_set_option(buf, "modifiable", true)
+	api.nvim_set_option_value("modifiable", true, { buf = buf })
 
 	-- Get the current lines in the buffer
 	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
@@ -150,7 +150,7 @@ function M.update(win, buf, index, total, success, command_output)
 	api.nvim_buf_set_lines(buf, 0, -1, false, lines_to_write)
 
 	-- Make the buffer unmodifiable
-	api.nvim_buf_set_option(buf, "modifiable", false)
+	api.nvim_set_option_value("modifiable", false, { buf = buf })
 
 	-- Set the cursor to the last line
 	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
@@ -158,7 +158,7 @@ end
 
 function M.update_progress(win, buf, index, total)
 	-- Make the buffer modifiable
-	api.nvim_buf_set_option(buf, "modifiable", true)
+	api.nvim_set_option_value("modifiable", true, { buf = buf })
 
 	-- Get the current lines in the buffer
 	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
@@ -175,7 +175,7 @@ function M.update_progress(win, buf, index, total)
 	api.nvim_buf_set_lines(buf, 0, -1, false, lines_to_write)
 
 	-- Make the buffer unmodifiable
-	api.nvim_buf_set_option(buf, "modifiable", false)
+	api.nvim_set_option_value("modifiable", false, { buf = buf })
 
 	-- Set the cursor to the last line
 	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
