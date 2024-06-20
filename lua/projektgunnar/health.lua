@@ -1,18 +1,18 @@
 local M = {}
 
 M.check = function()
-	vim.health.report_start("CLI tools")
+	vim.health.start("CLI tools")
 
 	-- Check if `dotnet` is installed
 	if vim.fn.executable("dotnet") == 0 then
-		vim.health.report_error("dotnet")
+		vim.health.error("dotnet")
 	else
 		-- Run `dotnet --version` to get the version of dotnet
 		local handle = io.popen("dotnet --version")
 
 		-- If the output is nil then report an error (this should never happen)
 		if handle == nil then
-			vim.health.report_error("error on attempting to read `dotnet --version`")
+			vim.health.error("error on attempting to read `dotnet --version`")
 			return
 		end
 
@@ -24,7 +24,7 @@ M.check = function()
 		local version = result.gsub(result, "\n", "")
 
 		-- Report the version of `dotnet`
-		vim.health.report_ok("`dotnet` found " .. version)
+		vim.health.ok("`dotnet` found " .. version)
 	end
 end
 
