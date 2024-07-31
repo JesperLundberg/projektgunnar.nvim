@@ -2,13 +2,16 @@ local async = require("projektgunnar.async")
 local utils = require("projektgunnar.utils")
 local nugets = require("projektgunnar.nugets")
 local picker = require("projektgunnar.picker")
+local input_window = require("projektgunnar.input_window")
 
 local M = {}
 
 -- add nuget to project
 function M.add_nuget_to_project()
 	-- ask user for nuget to add
-	local nuget_to_add = vim.fn.input("Nuget to add: ")
+	local nuget_to_add = input_window.input_window(function(input)
+		return input
+	end, { title = "Nuget to add" })
 
 	-- if the user did not select a nuget, return
 	if nuget_to_add == "" then
