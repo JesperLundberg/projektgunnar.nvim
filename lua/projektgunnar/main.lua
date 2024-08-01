@@ -2,48 +2,49 @@ local async = require("projektgunnar.async")
 local utils = require("projektgunnar.utils")
 local nugets = require("projektgunnar.nugets")
 local picker = require("projektgunnar.picker")
+local input_window = require("projektgunnar.input_window")
 
 local M = {}
 
--- add nuget to project
+--- add nuget to project
 function M.add_nuget_to_project()
-	-- ask user for nuget to add
-	local nuget_to_add = vim.fn.input("Nuget to add: ")
+	-- ask user for nuget to add (using callback method to ensure correct order of execution)
+	input_window.input_window(function(nuget_to_add)
+		-- if the user did not select a nuget, return
+		if nuget_to_add == "" then
+			vim.notify("No nuget selected", vim.log.levels.ERROR)
+			return
+		end
 
-	-- if the user did not select a nuget, return
-	if nuget_to_add == "" then
-		vim.notify("No nuget selected", vim.log.levels.ERROR)
-		return
-	end
+		-- get all projects in the solution
+		local projects = utils.get_all_projects_in_solution()
 
-	-- get all projects in the solution
-	local projects = utils.get_all_projects_in_solution()
+		-- If there are no projects in the solution, notify the user and return
+		if #projects == 0 then
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
+			return
+		end
 
-	-- If there are no projects in the solution, notify the user and return
-	if #projects == 0 then
-		vim.notify("No projects in solution", vim.log.levels.ERROR)
-		return
-	end
+		-- ask user for project to add nuget to
+		local choice = picker.ask_user_for_choice("Add to", projects)
 
-	-- ask user for project to add nuget to
-	local choice = picker.ask_user_for_choice("Add to", projects)
+		-- if the user did not select a project, return
+		if not choice then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
 
-	-- if the user did not select a project, return
-	if not choice then
-		vim.notify("No project chosen", vim.log.levels.ERROR)
-		return
-	end
+		-- create command and nuget to add table
+		local command_and_nuget_to_add = {
+			[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = { nuget_to_add } },
+		}
 
-	-- create command and nuget to add table
-	local command_and_nuget_to_add = {
-		[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = { nuget_to_add } },
-	}
-
-	-- add nuget to project
-	async.handle_nugets_in_project("Add", command_and_nuget_to_add)
+		-- add nuget to project
+		async.handle_nugets_in_project("Add", command_and_nuget_to_add)
+	end, { title = "Nuget to add" })
 end
 
--- remove nuget from project
+--- remove nuget from project
 function M.remove_nuget_from_project()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
@@ -90,7 +91,7 @@ function M.remove_nuget_from_project()
 	async.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
 end
 
--- update nugets in project
+--- update nugets in project
 function M.update_nugets_in_project()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
@@ -119,7 +120,7 @@ function M.update_nugets_in_project()
 	async.handle_nugets_in_project("Update", command_and_nugets)
 end
 
--- update all nugets in the solution
+--- update all nugets in the solution
 function M.update_nugets_in_solution()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
@@ -152,7 +153,7 @@ function M.update_nugets_in_solution()
 	async.handle_nugets_in_project("Update", all_projects_and_nugets)
 end
 
--- Function to add or remove project reference
+--- Function to add or remove project reference
 function M.add_project_reference()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
@@ -193,7 +194,7 @@ function M.add_project_reference()
 	async.handle_project_reference("add", project_to_add_to, choice)
 end
 
--- remove project from project
+--- remove project from project
 function M.remove_project_reference()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
@@ -229,7 +230,7 @@ function M.remove_project_reference()
 	async.handle_project_reference("remove", project_to_remove_from, choice)
 end
 
--- add project to solution
+--- add project to solution
 function M.add_project_to_solution()
 	-- get all projects in the solution folder and in the solution respectively
 	local all_csproj_files = utils.get_all_projects_in_solution_folder_not_in_solution()

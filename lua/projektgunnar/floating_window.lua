@@ -2,8 +2,8 @@ local api = vim.api
 
 local M = {}
 
--- Method to center a string in a window
--- @param str string
+--- Method to center a string in a window
+--- @param str string
 local function center(str)
 	-- Get the width of the current window
 	local width = api.nvim_win_get_width(0)
@@ -12,8 +12,8 @@ local function center(str)
 	return string.rep(" ", shift) .. str
 end
 
--- Floating result window
--- @return number, number
+--- Floating result window
+--- @return number, number
 function M.open()
 	-- Create buffers for both windows
 	local buf = api.nvim_create_buf(false, true)
@@ -73,6 +73,9 @@ function M.open()
 	return win, buf -- Return window and buffer handles
 end
 
+--- Method to update the floating window with a done message
+--- @param win number window handle
+--- @param buf number buffer handle
 function M.update_with_done_message(win, buf)
 	-- Make the buffer modifiable
 	api.nvim_set_option_value("modifiable", true, { buf = buf })
@@ -98,16 +101,16 @@ function M.update_with_done_message(win, buf)
 	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
 end
 
--- Method to print what command will be run
--- @param win window handle
--- @param buf buffer handle
--- @param message string
-function M.print_message(win, buf, message)
+--- Method to print what command will be run
+--- @param win number window handle
+--- @param buf number buffer handle
+--- @param str string
+function M.print_message(win, buf, str)
 	-- Make the buffer modifiable
 	api.nvim_set_option_value("modifiable", true, { buf = buf })
 
 	-- Add delimiter under the message
-	message = { message, "----------------------------------------" }
+	local message = { str, "----------------------------------------" }
 
 	-- Set the message
 	api.nvim_buf_set_lines(buf, 2, -1, false, message)
@@ -119,13 +122,13 @@ function M.print_message(win, buf, message)
 	api.nvim_win_set_cursor(win, { #message, 2 })
 end
 
--- Method to set the content of the window
--- @param win window handle
--- @param buf buffer handle
--- @param index number
--- @param total number
--- @param success boolean
--- @param command_output string
+--- Method to set the content of the window
+--- @param win number window handle
+--- @param buf number buffer handle
+--- @param index number which index we are at
+--- @param total number total number of items
+--- @param success boolean if the command was successful
+--- @param command_output string the command that was run
 function M.update(win, buf, index, total, success, command_output)
 	-- Make the buffer modifiable
 	api.nvim_set_option_value("modifiable", true, { buf = buf })
@@ -156,6 +159,11 @@ function M.update(win, buf, index, total, success, command_output)
 	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
 end
 
+--- Method to update the progress in the floating window
+--- @param win number window handle
+--- @param buf number buffer handle
+--- @param index number which index we are at
+--- @param total number total number of items
 function M.update_progress(win, buf, index, total)
 	-- Make the buffer modifiable
 	api.nvim_set_option_value("modifiable", true, { buf = buf })

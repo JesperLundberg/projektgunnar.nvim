@@ -1,7 +1,7 @@
 local M = {}
 
--- function to require a module and return nil if it fails
--- @param module string
+--- function to require a module and return nil if it fails
+--- @param module string the module to require (safely)
 function M.prequire(module)
 	local ok, err = pcall(require, module)
 	if not ok then
@@ -10,9 +10,9 @@ function M.prequire(module)
 	return err
 end
 
--- get all the references that provided project has
--- @param project string
--- @return table
+--- get all the references that provided project has
+--- @param project string the project to get references for
+--- @return table
 function M.get_project_references(project)
 	-- get all references
 	local output = vim.fn.systemlist("dotnet list " .. project .. " reference")
@@ -50,10 +50,10 @@ function M.get_all_projects_in_solution_folder_not_in_solution()
 	return output
 end
 
--- find out if table has the provided value
--- @param tab table
--- @param val string
--- @return bool
+--- find out if table has the provided value
+--- @param tab table the table to search
+--- @param val string the value to search for
+--- @return boolean
 function M.has_value(tab, val)
 	if tab == nil then
 		return false
@@ -68,10 +68,10 @@ function M.has_value(tab, val)
 	return false
 end
 
--- function to concatenate two tables (destructive on t1)
--- @param t1 table
--- @param t2 table
--- @return table
+--- function to concatenate two tables (destructive on t1)
+--- @param t1 table the table to concatenate to
+--- @param t2 table the table to add to t1
+--- @return table
 function M.table_concat(t1, t2)
 	for i = 1, #t2 do
 		t1[#t1 + 1] = t2[i]

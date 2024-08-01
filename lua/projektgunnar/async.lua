@@ -4,7 +4,7 @@ local M = {}
 
 local async_task
 
--- Function to reset and clean up after each run
+--- Function to reset and clean up the async task after each run
 local function reset_and_cleanup()
 	-- Stop the coroutine if it's running
 	if async_task and coroutine.status(async_task) == "running" then
@@ -15,10 +15,10 @@ local function reset_and_cleanup()
 	async_task = nil
 end
 
--- Coroutine function to perform asynchronous task
--- @param command_and_item table
--- @param win number
--- @param buf number
+--- Coroutine function to perform asynchronous task
+--- @param command_and_items table
+--- @param win number
+--- @param buf number
 local function create_async_task(command_and_items, win, buf)
 	return coroutine.create(function()
 		-- loop through the command and item table
@@ -72,9 +72,9 @@ local function create_async_task(command_and_items, win, buf)
 	end)
 end
 
--- Function to add or update nugets in/to project
--- @param action string
--- @param command_and_nugets table
+--- Function to add or update nugets in/to project
+--- @param action string
+--- @param command_and_nugets table
 function M.handle_nugets_in_project(action, command_and_nugets)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
@@ -95,10 +95,10 @@ function M.handle_nugets_in_project(action, command_and_nugets)
 	coroutine.resume(async_task, win, buf)
 end
 
--- Function to add project to project
--- @param action string
--- @param project_path string
--- @param project_reference_path string
+--- Function to add project to project
+--- @param action string
+--- @param project_path string
+--- @param project_reference_path string
 function M.handle_project_reference(action, project_path, project_reference_path)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
@@ -137,8 +137,8 @@ function M.handle_project_reference(action, project_path, project_reference_path
 	coroutine.resume(async_task, win, buf)
 end
 
--- Function to add project to solution
--- @param project_to_add_path string
+--- Function to add project to solution
+--- @param project_to_add_path string
 function M.add_project_to_solution(project_to_add_path)
 	-- Open a floating window and get handles
 	local win, buf = floating_window.open()
