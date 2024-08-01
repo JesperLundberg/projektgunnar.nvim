@@ -28,6 +28,7 @@ Using lazy package manager:
 "JesperLundberg/projektgunnar.nvim",
 dependencies = {
     "echasnovski/mini.pick",
+    "nvim-lua/plenary.nvim",
 },
 ```
 
