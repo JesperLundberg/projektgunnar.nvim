@@ -6,9 +6,9 @@ local input_window = require("projektgunnar.input_window")
 
 local M = {}
 
--- add nuget to project
+--- add nuget to project
 function M.add_nuget_to_project()
-	-- ask user for nuget to add
+	-- ask user for nuget to add (using callback method to ensure correct order of execution)
 	input_window.input_window(function(nuget_to_add)
 		-- if the user did not select a nuget, return
 		if nuget_to_add == "" then
@@ -44,7 +44,7 @@ function M.add_nuget_to_project()
 	end, { title = "Nuget to add" })
 end
 
--- remove nuget from project
+--- remove nuget from project
 function M.remove_nuget_from_project()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
@@ -91,7 +91,7 @@ function M.remove_nuget_from_project()
 	async.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
 end
 
--- update nugets in project
+--- update nugets in project
 function M.update_nugets_in_project()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
@@ -120,7 +120,7 @@ function M.update_nugets_in_project()
 	async.handle_nugets_in_project("Update", command_and_nugets)
 end
 
--- update all nugets in the solution
+--- update all nugets in the solution
 function M.update_nugets_in_solution()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
@@ -153,7 +153,7 @@ function M.update_nugets_in_solution()
 	async.handle_nugets_in_project("Update", all_projects_and_nugets)
 end
 
--- Function to add or remove project reference
+--- Function to add or remove project reference
 function M.add_project_reference()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
@@ -194,7 +194,7 @@ function M.add_project_reference()
 	async.handle_project_reference("add", project_to_add_to, choice)
 end
 
--- remove project from project
+--- remove project from project
 function M.remove_project_reference()
 	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
@@ -230,7 +230,7 @@ function M.remove_project_reference()
 	async.handle_project_reference("remove", project_to_remove_from, choice)
 end
 
--- add project to solution
+--- add project to solution
 function M.add_project_to_solution()
 	-- get all projects in the solution folder and in the solution respectively
 	local all_csproj_files = utils.get_all_projects_in_solution_folder_not_in_solution()
