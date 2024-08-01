@@ -9,41 +9,39 @@ local M = {}
 -- add nuget to project
 function M.add_nuget_to_project()
 	-- ask user for nuget to add
-	local nuget_to_add = input_window.input_window(function(input)
-		return input
+	input_window.input_window(function(nuget_to_add)
+		-- if the user did not select a nuget, return
+		if nuget_to_add == "" then
+			vim.notify("No nuget selected", vim.log.levels.ERROR)
+			return
+		end
+
+		-- get all projects in the solution
+		local projects = utils.get_all_projects_in_solution()
+
+		-- If there are no projects in the solution, notify the user and return
+		if #projects == 0 then
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
+			return
+		end
+
+		-- ask user for project to add nuget to
+		local choice = picker.ask_user_for_choice("Add to", projects)
+
+		-- if the user did not select a project, return
+		if not choice then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
+
+		-- create command and nuget to add table
+		local command_and_nuget_to_add = {
+			[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = { nuget_to_add } },
+		}
+
+		-- add nuget to project
+		async.handle_nugets_in_project("Add", command_and_nuget_to_add)
 	end, { title = "Nuget to add" })
-
-	-- if the user did not select a nuget, return
-	if nuget_to_add == "" then
-		vim.notify("No nuget selected", vim.log.levels.ERROR)
-		return
-	end
-
-	-- get all projects in the solution
-	local projects = utils.get_all_projects_in_solution()
-
-	-- If there are no projects in the solution, notify the user and return
-	if #projects == 0 then
-		vim.notify("No projects in solution", vim.log.levels.ERROR)
-		return
-	end
-
-	-- ask user for project to add nuget to
-	local choice = picker.ask_user_for_choice("Add to", projects)
-
-	-- if the user did not select a project, return
-	if not choice then
-		vim.notify("No project chosen", vim.log.levels.ERROR)
-		return
-	end
-
-	-- create command and nuget to add table
-	local command_and_nuget_to_add = {
-		[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = { nuget_to_add } },
-	}
-
-	-- add nuget to project
-	async.handle_nugets_in_project("Add", command_and_nuget_to_add)
 end
 
 -- remove nuget from project
