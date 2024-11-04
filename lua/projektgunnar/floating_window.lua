@@ -73,6 +73,11 @@ function M.open()
 	return win, buf -- Return window and buffer handles
 end
 
+--- Method to update the buffer line
+function M.update_buffer_line(buf, line)
+	api.nvim_buf_set_lines(buf, -2, -1, false, { line })
+end
+
 --- Method to update the floating window with a done message
 --- @param win number window handle
 --- @param buf number buffer handle
@@ -120,6 +125,62 @@ function M.print_message(win, buf, str)
 
 	-- Set the cursor to the last line
 	api.nvim_win_set_cursor(win, { #message, 2 })
+end
+
+local spinner_chars = { "|", "/", "-", "\\" }
+local spinner_index = 1
+local last_spinner_line = nil
+
+function M.progress_spinner(win, buf)
+	-- Make the buffer modifiable
+	api.nvim_set_option_value("modifiable", true, { buf = buf })
+
+	-- Get the current lines in the buffer
+	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
+
+	-- Find the last spinner line if it exists
+	local spinner_char = spinner_chars[spinner_index]
+
+	if #current_lines > 0 then
+		-- Replace the last line with just the spinner character
+		current_lines[#current_lines] = spinner_char .. " "
+
+		-- Update the buffer content
+		api.nvim_buf_set_lines(buf, 0, -1, false, current_lines)
+	else
+		-- Buffer is empty, append a new line with the spinner
+		api.nvim_buf_set_lines(buf, 0, -1, false, { spinner_char .. " " })
+	end
+
+	spinner_index = (spinner_index % #spinner_chars) + 1
+
+	-- Make the buffer unmodifiable
+	api.nvim_set_option_value("modifiable", false, { buf = buf })
+
+	-- Set the cursor to the last line
+	api.nvim_win_set_cursor(win, { #current_lines, 0 })
+end
+
+function M.clear_spinner(buf)
+	-- Make the buffer modifiable
+	api.nvim_set_option_value("modifiable", true, { buf = buf })
+
+	-- Get the current lines in the buffer
+	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
+
+	-- Clear the spinner if it exists
+	if #current_lines > 0 then
+		current_lines[#current_lines] = ""
+
+		-- Update the buffer content
+		api.nvim_buf_set_lines(buf, 0, -1, false, current_lines)
+	end
+
+	-- Reset the last spinner line index
+	last_spinner_line = nil
+
+	-- Make the buffer unmodifiable
+	api.nvim_set_option_value("modifiable", false, { buf = buf })
 end
 
 --- Method to set the content of the window
