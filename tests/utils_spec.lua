@@ -4,7 +4,7 @@ local assert = require("luassert")
 local stub = require("luassert.stub")
 
 describe("utils", function()
-	local utils = require("lua.projektgunnar.utils")
+	local utils = require("projektgunnar.utils")
 
 	describe("table_concat", function()
 		it("should concatenate two tables", function()

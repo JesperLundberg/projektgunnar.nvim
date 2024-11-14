@@ -17,9 +17,8 @@ end
 
 --- Coroutine function to perform asynchronous task
 --- @param command_and_items table
---- @param win number
 --- @param buf number
-local function create_async_task(command_and_items, win, buf)
+local function create_async_task(command_and_items, buf)
 	return coroutine.create(function()
 		-- loop through the command and item table
 		for commandIndex, command_and_item in ipairs(command_and_items) do
@@ -32,7 +31,7 @@ local function create_async_task(command_and_items, win, buf)
 			local captured_lines = {}
 
 			-- Print progress
-			floating_window.update_progress(win, buf, commandIndex, total_commands)
+			floating_window.update_progress(buf, commandIndex, total_commands)
 
 			-- Loop through all nugets and update them
 			for nugetIndex, item_to_add in ipairs(command_and_item.items) do
@@ -47,7 +46,7 @@ local function create_async_task(command_and_items, win, buf)
 					on_stdout = function(_, data)
 						for _, line in ipairs(data) do
 							table.insert(captured_lines, line)
-							floating_window.progress_spinner(win, buf)
+							floating_window.progress_spinner(buf)
 						end
 					end,
 					on_exit = function(_, code)
@@ -61,10 +60,10 @@ local function create_async_task(command_and_items, win, buf)
 						floating_window.clear_spinner(buf)
 
 						-- Update buffer with success/failure information
-						floating_window.update(win, buf, nugetIndex, total_nugets, success, dotnet_command)
+						floating_window.update(buf, nugetIndex, total_nugets, success, dotnet_command)
 
 						-- Resume the coroutine for the next iteration
-						coroutine.resume(async_task, win, buf)
+						coroutine.resume(async_task, buf)
 					end,
 				})
 
@@ -74,7 +73,7 @@ local function create_async_task(command_and_items, win, buf)
 
 			-- when all work is done, update the floating window with a done message
 			if #command_and_items == commandIndex then
-				floating_window.update_with_done_message(win, buf)
+				floating_window.update_with_done_message(buf)
 			end
 		end
 		-- After all iterations are complete, reset and clean up
@@ -87,22 +86,22 @@ end
 --- @param command_and_nugets table
 function M.handle_nugets_in_project(action, command_and_nugets)
 	-- Open a floating window and get handles
-	local win, buf = floating_window.open()
+	local buf = floating_window.open()
 
 	-- If there is only one command and nugets, it is a project, otherwise it is a solution
 	local project_or_solution = #command_and_nugets == 1 and " project" or " solution"
 
 	-- Notify the user that the command will add or update nugets
-	floating_window.print_message(win, buf, action .. " nugets in" .. project_or_solution)
+	floating_window.print_message(buf, action .. " nugets in" .. project_or_solution)
 
 	-- Reset and cleanup from previous run
 	reset_and_cleanup()
 
 	-- Create a new coroutine for the current run
-	async_task = create_async_task(command_and_nugets, win, buf)
+	async_task = create_async_task(command_and_nugets, buf)
 
 	-- Start the coroutine with the floating window handles
-	coroutine.resume(async_task, win, buf)
+	coroutine.resume(async_task, buf)
 end
 
 --- Function to add project to project
@@ -111,18 +110,16 @@ end
 --- @param project_reference_path string
 function M.handle_project_reference(action, project_path, project_reference_path)
 	-- Open a floating window and get handles
-	local win, buf = floating_window.open()
+	local buf = floating_window.open()
 
 	-- Notify the user that the command either add or remove project reference
 	if action == "add" then
 		floating_window.print_message(
-			win,
 			buf,
 			"Adding project " .. project_reference_path .. " to project " .. project_path
 		)
 	else
 		floating_window.print_message(
-			win,
 			buf,
 			"Removing project " .. project_reference_path .. " from project " .. project_path
 		)
@@ -141,20 +138,20 @@ function M.handle_project_reference(action, project_path, project_reference_path
 	}
 
 	-- Create a new coroutine for the current run
-	async_task = create_async_task(command_and_project, win, buf)
+	async_task = create_async_task(command_and_project, buf)
 
 	-- Start the coroutine with the floating window handles
-	coroutine.resume(async_task, win, buf)
+	coroutine.resume(async_task, buf)
 end
 
 --- Function to add project to solution
 --- @param project_to_add_path string
 function M.add_project_to_solution(project_to_add_path)
 	-- Open a floating window and get handles
-	local win, buf = floating_window.open()
+	local buf = floating_window.open()
 
 	-- Notify the user that the command will add project to project
-	floating_window.print_message(win, buf, "Adding project " .. project_to_add_path .. " to solution")
+	floating_window.print_message(buf, "Adding project " .. project_to_add_path .. " to solution")
 
 	-- Reset and cleanup from previous run
 	reset_and_cleanup()
@@ -163,10 +160,10 @@ function M.add_project_to_solution(project_to_add_path)
 		[1] = { command = "dotnet sln add ", items = { project_to_add_path } },
 	}
 	-- Create a new coroutine for the current run
-	async_task = create_async_task(command_and_project, win, buf)
+	async_task = create_async_task(command_and_project, buf)
 
 	-- Start the coroutine with the floating window handles
-	coroutine.resume(async_task, win, buf)
+	coroutine.resume(async_task, buf)
 end
 
 return M
