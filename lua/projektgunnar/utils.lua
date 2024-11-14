@@ -51,8 +51,8 @@ function M.get_all_projects_in_solution_folder_not_in_solution()
 end
 
 --- find out if table has the provided value
---- @param tab table the table to search
---- @param val string the value to search for
+--- @param tab table|nil the table to search
+--- @param val string|number|nil the value to search for
 --- @return boolean
 function M.has_value(tab, val)
 	if tab == nil then

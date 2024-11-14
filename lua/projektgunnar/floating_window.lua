@@ -13,7 +13,7 @@ local function center(str)
 end
 
 --- Floating result window
---- @return number, number
+--- @return number
 function M.open()
 	-- Create buffers for both windows
 	local buf = api.nvim_create_buf(false, true)
@@ -62,7 +62,7 @@ function M.open()
 
 	-- Open the border window first then the actual window
 	api.nvim_open_win(border_buf, true, border_opts)
-	local win = api.nvim_open_win(buf, true, opts)
+	api.nvim_open_win(buf, true, opts)
 
 	-- If the window is closed, close the border window as well
 	api.nvim_command('au BufWipeout <buffer> exe "silent bwipeout! "' .. border_buf)
@@ -70,13 +70,12 @@ function M.open()
 	-- we can add title already here, because first line will never change
 	api.nvim_buf_set_lines(buf, 0, -1, false, { center("ProjektGunnar"), "", "" })
 
-	return win, buf -- Return window and buffer handles
+	return buf -- Return window and buffer handles
 end
 
 --- Method to update the floating window with a done message
---- @param win number window handle
 --- @param buf number buffer handle
-function M.update_with_done_message(win, buf)
+function M.update_with_done_message(buf)
 	-- Make the buffer modifiable
 	api.nvim_set_option_value("modifiable", true, { buf = buf })
 
@@ -96,16 +95,12 @@ function M.update_with_done_message(win, buf)
 
 	-- Make the buffer unmodifiable
 	api.nvim_set_option_value("modifiable", false, { buf = buf })
-
-	-- Set the cursor to the last line
-	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
 end
 
 --- Method to print what command will be run
---- @param win number window handle
 --- @param buf number buffer handle
 --- @param str string
-function M.print_message(win, buf, str)
+function M.print_message(buf, str)
 	-- Make the buffer modifiable
 	api.nvim_set_option_value("modifiable", true, { buf = buf })
 
@@ -117,18 +112,14 @@ function M.print_message(win, buf, str)
 
 	-- Make the buffer unmodifiable
 	api.nvim_set_option_value("modifiable", false, { buf = buf })
-
-	-- Set the cursor to the last line
-	api.nvim_win_set_cursor(win, { #message, 2 })
 end
 
 local spinner_chars = { "*", "+", "/", "#" }
 local spinner_index = 1
 
 --- Method to show a spinner in the floating window
---- @param win number window handle
 --- @param buf number buffer handle
-function M.progress_spinner(win, buf)
+function M.progress_spinner(buf)
 	-- Make the buffer modifiable
 	api.nvim_set_option_value("modifiable", true, { buf = buf })
 
@@ -161,9 +152,6 @@ function M.progress_spinner(win, buf)
 
 	-- Make the buffer unmodifiable
 	api.nvim_set_option_value("modifiable", false, { buf = buf })
-
-	-- Set the cursor to the last line
-	api.nvim_win_set_cursor(win, { #current_lines, 0 })
 end
 
 --- Method to clear the spinner from the floating window
@@ -191,13 +179,12 @@ function M.clear_spinner(buf)
 end
 
 --- Method to set the content of the window
---- @param win number window handle
 --- @param buf number buffer handle
 --- @param index number which index we are at
 --- @param total number total number of items
 --- @param success boolean if the command was successful
 --- @param command_output string the command that was run
-function M.update(win, buf, index, total, success, command_output)
+function M.update(buf, index, total, success, command_output)
 	-- Make the buffer modifiable
 	api.nvim_set_option_value("modifiable", true, { buf = buf })
 
@@ -222,17 +209,13 @@ function M.update(win, buf, index, total, success, command_output)
 
 	-- Make the buffer unmodifiable
 	api.nvim_set_option_value("modifiable", false, { buf = buf })
-
-	-- Set the cursor to the last line
-	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
 end
 
 --- Method to update the progress in the floating window
---- @param win number window handle
 --- @param buf number buffer handle
 --- @param index number which index we are at
 --- @param total number total number of items
-function M.update_progress(win, buf, index, total)
+function M.update_progress(buf, index, total)
 	-- Make the buffer modifiable
 	api.nvim_set_option_value("modifiable", true, { buf = buf })
 
@@ -252,9 +235,6 @@ function M.update_progress(win, buf, index, total)
 
 	-- Make the buffer unmodifiable
 	api.nvim_set_option_value("modifiable", false, { buf = buf })
-
-	-- Set the cursor to the last line
-	api.nvim_win_set_cursor(win, { #lines_to_write, 0 })
 end
 
 return M

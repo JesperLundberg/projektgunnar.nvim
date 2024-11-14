@@ -4,7 +4,7 @@ local assert = require("luassert")
 local stub = require("luassert.stub")
 
 describe("utils", function()
-	local utils = require("lua.projektgunnar.utils")
+	local utils = require("projektgunnar.utils")
 
 	describe("table_concat", function()
 		it("should concatenate two tables", function()
@@ -154,12 +154,12 @@ describe("utils", function()
 
 	describe("prequire", function()
 		it("should return the module if it exists", function()
-			local result = utils.prequire("lua.projektgunnar.utils")
+			local result = utils.prequire("projektgunnar.utils")
 			assert.are.same(result, utils)
 		end)
 
 		it("should return nil if the module does not exist", function()
-			local result = utils.prequire("lua.projektgunnar.utils2")
+			local result = utils.prequire("projektgunnar.utils2")
 			assert.is_nil(result)
 		end)
 	end)
