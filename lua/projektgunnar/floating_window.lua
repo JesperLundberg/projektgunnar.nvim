@@ -122,6 +122,74 @@ function M.print_message(win, buf, str)
 	api.nvim_win_set_cursor(win, { #message, 2 })
 end
 
+local spinner_chars = { "*", "+", "/", "#" }
+local spinner_index = 1
+
+--- Method to show a spinner in the floating window
+--- @param win number window handle
+--- @param buf number buffer handle
+function M.progress_spinner(win, buf)
+	-- Make the buffer modifiable
+	api.nvim_set_option_value("modifiable", true, { buf = buf })
+
+	-- Get the current lines in the buffer
+	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
+
+	-- Find the last spinner line if it exists
+	local spinner_char = spinner_chars[spinner_index]
+
+	if #current_lines > 0 then
+		local last_line = current_lines[#current_lines]
+
+		if last_line:match("^[" .. table.concat(spinner_chars, "") .. "]") then
+			-- If the last line already has a spinner, replace it
+			current_lines[#current_lines] = spinner_char .. last_line:sub(2)
+		else
+			-- If there's no spinner yet, append a new line with the spinner
+			table.insert(current_lines, spinner_char .. " ")
+		end
+
+		-- Update the buffer content
+		api.nvim_buf_set_lines(buf, 0, -1, false, current_lines)
+	else
+		-- This should never happen, but just in case
+		-- Buffer is empty, append a new line with the spinner
+		api.nvim_buf_set_lines(buf, 0, -1, false, { spinner_char .. " " })
+	end
+
+	spinner_index = (spinner_index % #spinner_chars) + 1
+
+	-- Make the buffer unmodifiable
+	api.nvim_set_option_value("modifiable", false, { buf = buf })
+
+	-- Set the cursor to the last line
+	api.nvim_win_set_cursor(win, { #current_lines, 0 })
+end
+
+--- Method to clear the spinner from the floating window
+--- @param buf number buffer handle
+function M.clear_spinner(buf)
+	-- Make the buffer modifiable
+	api.nvim_set_option_value("modifiable", true, { buf = buf })
+
+	-- Get the current lines in the buffer
+	local current_lines = api.nvim_buf_get_lines(buf, 0, -1, false)
+
+	-- Clear spinner lines
+	local new_lines = {}
+	for _, line in ipairs(current_lines) do
+		if not line:match("^[" .. table.concat(spinner_chars, "") .. "]") then
+			table.insert(new_lines, line)
+		end
+	end
+
+	-- Update the buffer content
+	api.nvim_buf_set_lines(buf, 0, -1, false, new_lines)
+
+	-- Make the buffer unmodifiable
+	api.nvim_set_option_value("modifiable", false, { buf = buf })
+end
+
 --- Method to set the content of the window
 --- @param win number window handle
 --- @param buf number buffer handle

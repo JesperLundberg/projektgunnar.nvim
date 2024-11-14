@@ -29,6 +29,7 @@ local function create_async_task(command_and_items, win, buf)
 
 			local total_commands = #command_and_items
 			local total_nugets = #command_and_item.items
+			local captured_lines = {}
 
 			-- Print progress
 			floating_window.update_progress(win, buf, commandIndex, total_commands)
@@ -43,12 +44,21 @@ local function create_async_task(command_and_items, win, buf)
 
 				-- Start an external command as a job (non-blocking)
 				vim.fn.jobstart(dotnet_command, {
+					on_stdout = function(_, data)
+						for _, line in ipairs(data) do
+							table.insert(captured_lines, line)
+							floating_window.progress_spinner(win, buf)
+						end
+					end,
 					on_exit = function(_, code)
 						-- Check the exit code if needed
 						if code == 0 then
 							-- Update buffer lines with the current iteration (success)
 							success = true
 						end
+
+						-- Clear the spinner if it exists
+						floating_window.clear_spinner(buf)
 
 						-- Update buffer with success/failure information
 						floating_window.update(win, buf, nugetIndex, total_nugets, success, dotnet_command)
