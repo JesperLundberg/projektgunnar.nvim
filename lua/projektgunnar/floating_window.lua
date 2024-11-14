@@ -73,11 +73,6 @@ function M.open()
 	return win, buf -- Return window and buffer handles
 end
 
---- Method to update the buffer line
-function M.update_buffer_line(buf, line)
-	api.nvim_buf_set_lines(buf, -2, -1, false, { line })
-end
-
 --- Method to update the floating window with a done message
 --- @param win number window handle
 --- @param buf number buffer handle
