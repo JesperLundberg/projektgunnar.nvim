@@ -114,7 +114,7 @@ function M.print_message(buf, str)
 	api.nvim_set_option_value("modifiable", false, { buf = buf })
 end
 
-local spinner_chars = { "*", "+", "/", "#" }
+local spinner_chars = { "\\", "|", "/", "|" }
 local spinner_index = 1
 
 --- Method to show a spinner in the floating window
