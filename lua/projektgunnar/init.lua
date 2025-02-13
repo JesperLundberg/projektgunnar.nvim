@@ -43,7 +43,6 @@ end
 
 
 vim.api.nvim_create_user_command("ProjektGunnar", function(opts)
-    -- If the command exists then run the corresponding function
     if M.opts.telescope then
         local comms = {}
         for k, _ in pairs(commands) do
@@ -53,8 +52,9 @@ vim.api.nvim_create_user_command("ProjektGunnar", function(opts)
             local command = comms[row]
             commands[command]()
         end
-        require("projektgunnar.telescopewindow").createTelescopeWindow(comms, select_current_line)
+        require("projektgunnar.telescopewindow").createTelescopeWindow(comms, select_current_line, "Select command")
     else
+        -- If the command exists then run the corresponding function
         commands[opts.args]()
     end
 end, { nargs = "*", complete = tab_completion, desc = "ProjektGunnar plugin" })

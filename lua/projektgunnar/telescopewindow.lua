@@ -2,7 +2,8 @@ local M = {}
 
 ---@param options string[]
 ---@param callback fun(integer)
-function M.createTelescopeWindow(options, callback)
+---@param title string
+function M.createTelescopeWindow(options, callback, title)
     local pickers = require("telescope.pickers")
     local finders = require("telescope.finders")
     local conf = require("telescope.config").values
@@ -10,10 +11,10 @@ function M.createTelescopeWindow(options, callback)
     print(options)
 
     local max_height = 40
-    local height = math.min(#options * 5, max_height)
+    local height = math.min(#options + 4, max_height)
     pickers
         .new({}, {
-            prompt_title = "Select an Option",
+            results_title = title,
             finder = finders.new_table({
                 results = options,
             }),
