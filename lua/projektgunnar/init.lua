@@ -1,8 +1,6 @@
+local picker = require("projektgunnar.picker")
+
 local M = {}
-M.opts = {}
-function M.setup(opts)
-    M.opts = opts
-end
 
 -- Available commands for ProjektGunnar
 local commands = {
@@ -43,16 +41,18 @@ end
 
 
 vim.api.nvim_create_user_command("ProjektGunnar", function(opts)
-    if M.opts.telescope then
+    -- If called without arguments, show the user a list of commands to choose from
+    if opts.args == "" then
         local comms = {}
         for k, _ in pairs(commands) do
             table.insert(comms, k)
         end
-        local function select_current_line(row)
-            local command = comms[row]
-            commands[command]()
+        local choice = picker.ask_user_for_choice("Choose command", comms)
+        if not choice then
+            vim.notify("No command chosen", vim.log.levels.ERROR)
+            return
         end
-        require("projektgunnar.telescopewindow").createTelescopeWindow(comms, select_current_line, "Select command")
+        commands[choice]()
     else
         -- If the command exists then run the corresponding function
         commands[opts.args]()
