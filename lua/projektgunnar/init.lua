@@ -39,7 +39,6 @@ local function tab_completion(_, _, _)
 	return tab_commands
 end
 
-
 vim.api.nvim_create_user_command("ProjektGunnar", function(opts)
 	-- If called without arguments, show the user a list of commands to choose from
 	if opts.args == "" then

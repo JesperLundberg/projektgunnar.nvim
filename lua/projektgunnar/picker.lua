@@ -16,12 +16,12 @@ function M.ask_user_for_choice(prompt, items)
 		window = {
 			prompt_prefix = prompt .. "> ",
 			config = {
-				anchor = 'NW',
+				anchor = "NW",
 				height = height,
 				width = width,
 				row = math.floor(0.5 * (vim.o.lines - height)),
 				col = math.floor(0.5 * (vim.o.columns - width)),
-			}
+			},
 		},
 		source = { items = items },
 	}
