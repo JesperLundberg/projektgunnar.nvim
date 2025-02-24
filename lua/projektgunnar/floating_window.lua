@@ -61,14 +61,20 @@ function M.open()
 	api.nvim_buf_set_lines(border_buf, 0, -1, false, border_lines)
 
 	-- Open the border window first then the actual window
-	api.nvim_open_win(border_buf, true, border_opts)
-	api.nvim_open_win(buf, true, opts)
+	local win = api.nvim_open_win(border_buf, true, border_opts)
+	local win2 = api.nvim_open_win(buf, true, opts)
 
 	-- If the window is closed, close the border window as well
 	api.nvim_command('au BufWipeout <buffer> exe "silent bwipeout! "' .. border_buf)
 
 	-- we can add title already here, because first line will never change
 	api.nvim_buf_set_lines(buf, 0, -1, false, { center("ProjektGunnar"), "", "" })
+
+	-- close win by pressing q
+	vim.keymap.set("n", "q", function()
+		vim.api.nvim_win_close(win, true)
+		vim.api.nvim_win_close(win2, true)
+	end, { buffer = buf, silent = true })
 
 	return buf -- Return window and buffer handles
 end

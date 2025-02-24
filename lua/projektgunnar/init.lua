@@ -1,3 +1,7 @@
+local picker = require("projektgunnar.picker")
+
+local M = {}
+
 -- Available commands for ProjektGunnar
 local commands = {
 	["AddNugetToProject"] = function()
@@ -36,6 +40,22 @@ local function tab_completion(_, _, _)
 end
 
 vim.api.nvim_create_user_command("ProjektGunnar", function(opts)
-	-- If the command exists then run the corresponding function
-	commands[opts.args]()
+	-- If called without arguments, show the user a list of commands to choose from
+	if opts.args == "" then
+		local comms = {}
+		for k, _ in pairs(commands) do
+			table.insert(comms, k)
+		end
+		local choice = picker.ask_user_for_choice("Choose command", comms)
+		if not choice then
+			vim.notify("No command chosen", vim.log.levels.ERROR)
+			return
+		end
+		commands[choice]()
+	else
+		-- If the command exists then run the corresponding function
+		commands[opts.args]()
+	end
 end, { nargs = "*", complete = tab_completion, desc = "ProjektGunnar plugin" })
+
+return M
