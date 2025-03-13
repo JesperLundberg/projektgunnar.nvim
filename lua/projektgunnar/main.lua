@@ -129,7 +129,7 @@ function M.update_nugets_in_solution()
 
 	for i, project in ipairs(projects) do
 		-- get all outdated nugets for the selected project
-		local outdated_nugets = nugets.outdated_nugets(project)
+		local outdated_nugets = nugets.all_outdated_nugets_in_solution()
 
 		vim.notify("Checking " .. i .. " out of " .. #projects .. " projects", vim.log.levels.INFO)
 
@@ -148,6 +148,12 @@ function M.update_nugets_in_solution()
 		utils.table_concat(all_projects_and_nugets, command_and_nugets)
 
 		::continue::
+	end
+
+	-- if there are no outdated nugets, notify the user and return
+	if #all_projects_and_nugets == 0 then
+		vim.notify("No outdated nugets in solution", vim.log.levels.WARN)
+		return
 	end
 
 	async.handle_nugets_in_project("Update", all_projects_and_nugets)
