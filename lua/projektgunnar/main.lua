@@ -150,6 +150,12 @@ function M.update_nugets_in_solution()
 		::continue::
 	end
 
+	-- if there are no outdated nugets, notify the user and return
+	if #all_projects_and_nugets == 0 then
+		vim.notify("No outdated nugets in solution", vim.log.levels.WARN)
+		return
+	end
+
 	async.handle_nugets_in_project("Update", all_projects_and_nugets)
 end
 
