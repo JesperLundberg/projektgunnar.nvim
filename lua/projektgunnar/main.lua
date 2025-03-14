@@ -139,9 +139,25 @@ function M.update_nugets_in_solution()
 			goto continue
 		end
 
+		-- get all nugets for the selected project and only keep the ones that are actually IN the project
+		-- this is done to avoid adding nugets that are not in the project to the project
+		local all_nugets = nugets.all_nugets(project)
+		local outdated_nugets_in_project = {}
+
+		-- loop through all outdated nugets and only keep the ones that are in the project
+		for _, nuget in ipairs(outdated_nugets) do
+			if utils.has_value(all_nugets, nuget) then
+				table.insert(outdated_nugets_in_project, nuget)
+			end
+		end
+
 		-- create command and nugets to update table
 		local command_and_nugets = {
-			[1] = { project = project, command = "dotnet add " .. project .. " package ", items = outdated_nugets },
+			[1] = {
+				project = project,
+				command = "dotnet add " .. project .. " package ",
+				items = outdated_nugets_in_project,
+			},
 		}
 
 		-- update nugets in project
