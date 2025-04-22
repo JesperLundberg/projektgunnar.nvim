@@ -10,6 +10,19 @@ function M.prequire(module)
 	return err
 end
 
+--- get the nuget.config file for the solution
+--- @return string
+function M.get_nuget_config_file()
+	-- get the current working directory
+	local cwd = vim.fn.getcwd()
+
+	-- find the nuget.config file in the current directory or any parent directory
+	local config_file = vim.fn.findfile("nuget.config", cwd .. ";")
+
+	-- return the config file path
+	return config_file
+end
+
 --- get all the references that provided project has
 --- @param project string the project to get references for
 --- @return table
