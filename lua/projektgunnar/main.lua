@@ -103,8 +103,11 @@ function M.update_nugets_in_project()
 		return
 	end
 
+	-- get the nuget.config file
+	local nuget_config_file = utils.get_nuget_config_file()
+
 	-- get all outdated nugets for the selected project
-	local outdated_nugets = nugets.outdated_nugets(choice)
+	local outdated_nugets = nugets.outdated_nugets(choice, nuget_config_file)
 
 	-- if there are no outdated nugets, notify the user and return
 	if #outdated_nugets == 0 then
@@ -128,8 +131,11 @@ function M.update_nugets_in_solution()
 	local all_projects_and_nugets = {}
 
 	for i, project in ipairs(projects) do
+		-- get the nuget.config file
+		local nuget_config_file = utils.get_nuget_config_file()
+
 		-- get all outdated nugets for the selected project
-		local outdated_nugets = nugets.all_outdated_nugets_in_solution()
+		local outdated_nugets = nugets.outdated_nugets(project, nuget_config_file)
 
 		vim.notify("Checking " .. i .. " out of " .. #projects .. " projects", vim.log.levels.INFO)
 
@@ -139,26 +145,16 @@ function M.update_nugets_in_solution()
 			goto continue
 		end
 
-		-- get all nugets for the selected project and only keep the ones that are actually IN the project
-		-- this is done to avoid adding nugets that are not in the project to the project
-		local all_nugets = nugets.all_nugets(project)
-		local outdated_nugets_in_project = {}
-
-		-- loop through all outdated nugets and only keep the ones that are in the project
-		for _, nuget in ipairs(outdated_nugets) do
-			if utils.has_value(all_nugets, nuget) then
-				table.insert(outdated_nugets_in_project, nuget)
-			end
-		end
-
 		-- create command and nugets to update table
 		local command_and_nugets = {
 			[1] = {
 				project = project,
 				command = "dotnet add " .. project .. " package ",
-				items = outdated_nugets_in_project,
+				items = outdated_nugets,
 			},
 		}
+
+		print(vim.inspect(command_and_nugets))
 
 		-- update nugets in project
 		utils.table_concat(all_projects_and_nugets, command_and_nugets)
