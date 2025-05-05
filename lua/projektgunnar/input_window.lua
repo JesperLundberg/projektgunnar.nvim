@@ -19,13 +19,14 @@ function M.input_window(on_confirm, opts)
 	local row = math.floor((win_height - height) / 2)
 	local col = math.floor((win_width - width) / 2)
 
+	-- Create the popup window
 	local win = require("plenary.popup").create("", {
 		title = opts.title or "",
 		style = "minimal",
 		borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" },
 		relative = "cursor",
-		borderhighlight = "NotisNisseBorder",
-		titlehighlight = "NotisNisseTitle",
+		borderhighlight = "ProjektGunnarBorder",
+		titlehighlight = "ProjektGunnarTitle",
 		focusable = true,
 		width = 25,
 		height = 1,

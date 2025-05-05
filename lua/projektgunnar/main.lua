@@ -154,8 +154,6 @@ function M.update_nugets_in_solution()
 			},
 		}
 
-		print(vim.inspect(command_and_nugets))
-
 		-- update nugets in project
 		utils.table_concat(all_projects_and_nugets, command_and_nugets)
 
