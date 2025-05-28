@@ -69,6 +69,7 @@ function M.open()
 
 	-- we can add title already here, because first line will never change
 	api.nvim_buf_set_lines(buf, 0, -1, false, { center("ProjektGunnar"), "", "" })
+	api.nvim_buf_set_lines(buf, 1, -1, false, { center("Close window with 'q'"), "", "" })
 
 	-- close win by pressing q
 	vim.keymap.set("n", "q", function()
