@@ -1,41 +1,3 @@
--- local picker = require("mini.pick")
---
--- local M = {}
---
--- --- Present user with a list of choices and return the choice
--- --- @param prompt string the prompt to show the user
--- --- @param items table the items to choose from
--- --- @return string
--- function M.ask_user_for_choice(prompt, items)
--- 	local height = math.floor(0.618 * vim.o.lines)
--- 	local width = math.floor(0.618 * vim.o.columns)
---
--- 	local mini_pick_config = {
--- 		-- This is a bit of a hack
--- 		-- Set the prompt as the prefix to the prompt
--- 		window = {
--- 			prompt_prefix = prompt .. "> ",
--- 			config = {
--- 				anchor = "NW",
--- 				height = height,
--- 				width = width,
--- 				row = math.floor(0.5 * (vim.o.lines - height)),
--- 				col = math.floor(0.5 * (vim.o.columns - width)),
--- 			},
--- 		},
--- 		source = { items = items },
--- 	}
---
--- 	-- Start the picker
--- 	local chosen_item = picker.start(mini_pick_config)
---
--- 	-- Return the chosen items
--- 	return chosen_item
--- end
---
--- return M
-
--- lua/projektgunnar/picker.lua
 local M = {}
 
 ---@class PGPickerConfig
@@ -53,16 +15,15 @@ function M.setup(user)
 	end
 end
 
--- ===== capability checks (lazy-load safe) =====
+-- Does telescope exist?
 local function has_telescope()
-	return pcall(require, "telescope") -- triggers lazy-load if configured
+	return pcall(require, "telescope")
 end
 
+-- Does mini.pick exist?
 local function has_mini_pick()
 	return pcall(require, "mini.pick")
 end
-
--- ===== async backends =====
 
 --- Telescope backend (async). Calls cb(choice|nil).
 ---@param prompt string
@@ -105,8 +66,9 @@ local function pick_telescope_async(prompt, items, cb)
 				return { value = entry, display = entry, ordinal = entry }
 			end,
 		}),
-		sorter = sorter, -- may be nil; Telescope will still work (iterates in given order)
+		sorter = sorter, -- may be nil; Telescope will still work (but will not fuzzy sort if nil)
 		attach_mappings = function(bufnr, map)
+			-- Return selected item
 			local function choose()
 				local sel = state.get_selected_entry()
 				local val = sel and (sel.value or sel[1]) or nil
@@ -115,17 +77,22 @@ local function pick_telescope_async(prompt, items, cb)
 					cb(val)
 				end)
 			end
+
+			-- No choice was made and we will just cancel
 			local function cancel()
 				actions.close(bufnr)
 				vim.schedule(function()
 					cb(nil)
 				end)
 			end
+
+			-- Mappings for telescope
 			map("i", "<CR>", choose)
 			map("n", "<CR>", choose)
 			map("i", "<C-c>", cancel)
 			map("n", "<Esc>", cancel)
 			map("n", "q", cancel)
+
 			return true
 		end,
 	})
@@ -175,10 +142,7 @@ local function pick_mini_async(prompt, items, cb)
 	end)
 end
 
--- ===== async dispatcher (keeps the same public name) =====
-
 --- Present choices asynchronously; calls cb(choice|nil) when done.
---- Minimal change: same function name as before, just with a callback.
 ---@param prompt string
 ---@param items string[]
 ---@param cb fun(choice: string|nil)
