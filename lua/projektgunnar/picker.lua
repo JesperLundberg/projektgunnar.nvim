@@ -4,7 +4,7 @@ local M = {}
 ---@field prefer string[]|nil  -- e.g. { "telescope", "mini" }
 local cfg = {
 	-- Prefer Telescope; if not available, fall back to mini.pick
-	prefer = { "telescope", "mini" },
+	prefer = require("projektgunnar.config").options.prefer,
 }
 
 --- Configure picker behavior (priority order)
