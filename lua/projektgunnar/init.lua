@@ -1,5 +1,3 @@
-local picker = require("projektgunnar.picker")
-
 local M = {}
 
 -- Available commands for ProjektGunnar
@@ -40,21 +38,31 @@ local function tab_completion(_, _, _)
 end
 
 vim.api.nvim_create_user_command("ProjektGunnar", function(opts)
-	-- If called without arguments, show the user a list of commands to choose from
+	-- No args: show picker and run chosen command via callback
 	if opts.args == "" then
-		local comms = {}
-		for k, _ in pairs(commands) do
-			table.insert(comms, k)
-		end
-		local choice = picker.ask_user_for_choice("Choose command", comms)
-		if not choice then
-			vim.notify("No command chosen", vim.log.levels.ERROR)
+		local comms = vim.tbl_keys(commands)
+		table.sort(comms)
+
+		require("projektgunnar.picker").ask_user_for_choice("Choose command", comms, function(choice)
+			if not choice then
+				vim.notify("No command chosen", vim.log.levels.ERROR)
+				return
+			end
+			local fn = commands[choice]
+			if not fn then
+				vim.notify("Unknown command: " .. tostring(choice), vim.log.levels.ERROR)
+				return
+			end
+			fn()
+		end)
+	else
+		-- With arg: run directly if it exists
+		local fn = commands[opts.args]
+		if not fn then
+			vim.notify("Unknown command: " .. tostring(opts.args), vim.log.levels.ERROR)
 			return
 		end
-		commands[choice]()
-	else
-		-- If the command exists then run the corresponding function
-		commands[opts.args]()
+		fn()
 	end
 end, { nargs = "*", complete = tab_completion, desc = "ProjektGunnar plugin" })
 
