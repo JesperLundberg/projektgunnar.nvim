@@ -66,4 +66,9 @@ vim.api.nvim_create_user_command("ProjektGunnar", function(opts)
 	end
 end, { nargs = "*", complete = tab_completion, desc = "ProjektGunnar plugin" })
 
+function M.setup(opts)
+	-- Setup the plugin
+	require("projektgunnar.config").setup(opts)
+end
+
 return M
