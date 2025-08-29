@@ -6,161 +6,144 @@ local input_window = require("projektgunnar.input_window")
 
 local M = {}
 
---- add nuget to project
+--- Add NuGet to a project
 function M.add_nuget_to_project()
-	-- ask user for nuget to add (using callback method to ensure correct order of execution)
+	-- Ask for the NuGet package first
 	input_window.input_window(function(nuget_to_add)
-		-- if the user did not select a nuget, return
 		if nuget_to_add == "" then
 			vim.notify("No nuget selected", vim.log.levels.ERROR)
 			return
 		end
 
-		-- get all projects in the solution
+		-- Gather all projects
 		local projects = utils.get_all_projects_in_solution()
-
-		-- If there are no projects in the solution, notify the user and return
 		if #projects == 0 then
 			vim.notify("No projects in solution", vim.log.levels.ERROR)
 			return
 		end
 
-		-- ask user for project to add nuget to
-		local choice = picker.ask_user_for_choice("Add to", projects)
+		-- Ask which project to add to
+		picker.ask_user_for_choice("Add to", projects, function(choice)
+			if not choice then
+				vim.notify("No project chosen", vim.log.levels.ERROR)
+				return
+			end
 
-		-- if the user did not select a project, return
-		if not choice then
-			vim.notify("No project chosen", vim.log.levels.ERROR)
-			return
-		end
+			local command_and_nuget_to_add = {
+				{
+					project = choice,
+					command = "dotnet add " .. choice .. " package ",
+					items = { nuget_to_add },
+				},
+			}
 
-		-- create command and nuget to add table
-		local command_and_nuget_to_add = {
-			[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = { nuget_to_add } },
-		}
-
-		-- add nuget to project
-		async.handle_nugets_in_project("Add", command_and_nuget_to_add)
+			async.handle_nugets_in_project("Add", command_and_nuget_to_add)
+		end)
 	end, { title = "Nuget to add" })
 end
 
---- remove nuget from project
+--- Remove a NuGet from a project
 function M.remove_nuget_from_project()
-	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-
-	-- If there are no projects in the solution, notify the user and return
 	if #projects == 0 then
 		vim.notify("No projects in solution", vim.log.levels.ERROR)
 		return
 	end
 
-	-- ask user for project to add nuget to
-	local choice = picker.ask_user_for_choice("Remove from", projects)
-
-	-- if the user did not select a project, return
-	if not choice then
-		vim.notify("No project chosen", vim.log.levels.ERROR)
-		return
-	end
-
-	-- get all nugets for the selected project
-	local all_nugets = nugets.all_nugets(choice)
-
-	-- if there are no nugets, notify the user and return
-	if #all_nugets == 0 then
-		vim.notify("No nugets in project " .. choice, vim.log.levels.WARN)
-		return
-	end
-
-	-- ask user for nuget to remove
-	local nuget_to_remove = picker.ask_user_for_choice("Remove which", all_nugets)
-
-	-- if the user did not select a nuget, return
-	if not nuget_to_remove then
-		vim.notify("No nuget chosen", vim.log.levels.WARN)
-		return
-	end
-
-	-- create command and nuget to remove table
-	local command_and_nuget_to_remove = {
-		[1] = { project = choice, command = "dotnet remove " .. choice .. " package ", items = { nuget_to_remove } },
-	}
-
-	-- remove nuget from project
-	async.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
-end
-
---- update nugets in project
-function M.update_nugets_in_project()
-	-- get all projects in the solution
-	local projects = utils.get_all_projects_in_solution()
-	local choice = picker.ask_user_for_choice("Update project", projects)
-
-	-- if the user did not select a project, return
-	if not choice then
-		vim.notify("No project chosen", vim.log.levels.ERROR)
-		return
-	end
-
-	-- get the nuget.config file
-	local nuget_config_file = utils.get_nuget_config_file()
-
-	-- get all outdated nugets for the selected project
-	local outdated_nugets = nugets.outdated_nugets(choice, nuget_config_file)
-
-	-- if there are no outdated nugets, notify the user and return
-	if #outdated_nugets == 0 then
-		vim.notify("No outdated nugets in project " .. choice, vim.log.levels.WARN)
-		return
-	end
-
-	-- create command and nugets to update table
-	local command_and_nugets = {
-		[1] = { project = choice, command = "dotnet add " .. choice .. " package ", items = outdated_nugets },
-	}
-	-- update nugets in project
-	async.handle_nugets_in_project("Update", command_and_nugets)
-end
-
---- update all nugets in the solution
-function M.update_nugets_in_solution()
-	-- get all projects in the solution
-	local projects = utils.get_all_projects_in_solution()
-
-	local all_projects_and_nugets = {}
-
-	for i, project in ipairs(projects) do
-		-- get the nuget.config file
-		local nuget_config_file = utils.get_nuget_config_file()
-
-		-- get all outdated nugets for the selected project
-		local outdated_nugets = nugets.outdated_nugets(project, nuget_config_file)
-
-		vim.notify("Checking " .. i .. " out of " .. #projects .. " projects", vim.log.levels.INFO)
-
-		-- if there are no outdated nugets, notify the user and return
-		if #outdated_nugets == 0 then
-			vim.notify("No outdated nugets in project " .. project, vim.log.levels.WARN)
-			goto continue
+	-- Pick project first
+	picker.ask_user_for_choice("Remove from", projects, function(project_choice)
+		if not project_choice then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
 		end
 
-		-- create command and nugets to update table
+		-- Fetch NuGets in the chosen project
+		local all_nugets = nugets.all_nugets(project_choice)
+		if #all_nugets == 0 then
+			vim.notify("No nugets in project " .. project_choice, vim.log.levels.WARN)
+			return
+		end
+
+		-- Pick which NuGet to remove
+		picker.ask_user_for_choice("Remove which", all_nugets, function(nuget_to_remove)
+			if not nuget_to_remove then
+				vim.notify("No nuget chosen", vim.log.levels.WARN)
+				return
+			end
+
+			local command_and_nuget_to_remove = {
+				{
+					project = project_choice,
+					command = "dotnet remove " .. project_choice .. " package ",
+					items = { nuget_to_remove },
+				},
+			}
+
+			async.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
+		end)
+	end)
+end
+
+--- Update NuGets in a single project
+function M.update_nugets_in_project()
+	local projects = utils.get_all_projects_in_solution()
+	if #projects == 0 then
+		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		return
+	end
+
+	-- Pick project to update
+	picker.ask_user_for_choice("Update project", projects, function(project_choice)
+		if not project_choice then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
+
+		local nuget_config_file = utils.get_nuget_config_file()
+		local outdated_nugets = nugets.outdated_nugets(project_choice, nuget_config_file)
+
+		if #outdated_nugets == 0 then
+			vim.notify("No outdated nugets in project " .. project_choice, vim.log.levels.WARN)
+			return
+		end
+
 		local command_and_nugets = {
-			[1] = {
-				project = project,
-				command = "dotnet add " .. project .. " package ",
+			{
+				project = project_choice,
+				command = "dotnet add " .. project_choice .. " package ",
 				items = outdated_nugets,
 			},
 		}
 
-		-- update nugets in project
-		utils.table_concat(all_projects_and_nugets, command_and_nugets)
+		async.handle_nugets_in_project("Update", command_and_nugets)
+	end)
+end
 
-		::continue::
+--- Update all outdated NuGets in the solution (no picker; runs through all projects)
+function M.update_nugets_in_solution()
+	local projects = utils.get_all_projects_in_solution()
+	local all_projects_and_nugets = {}
+
+	for i, project in ipairs(projects) do
+		local nuget_config_file = utils.get_nuget_config_file()
+		local outdated_nugets = nugets.outdated_nugets(project, nuget_config_file)
+
+		vim.notify("Checking " .. i .. " out of " .. #projects .. " projects", vim.log.levels.INFO)
+
+		if #outdated_nugets == 0 then
+			vim.notify("No outdated nugets in project " .. project, vim.log.levels.WARN)
+		else
+			local command_and_nugets = {
+				{
+					project = project,
+					command = "dotnet add " .. project .. " package ",
+					items = outdated_nugets,
+				},
+			}
+			utils.table_concat(all_projects_and_nugets, command_and_nugets)
+		end
 	end
 
-	-- if there are no outdated nugets, notify the user and return
 	if #all_projects_and_nugets == 0 then
 		vim.notify("No outdated nugets in solution", vim.log.levels.WARN)
 		return
@@ -169,114 +152,106 @@ function M.update_nugets_in_solution()
 	async.handle_nugets_in_project("Update", all_projects_and_nugets)
 end
 
---- Function to add or remove project reference
+--- Add a project reference
 function M.add_project_reference()
-	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-
-	-- If there are no projects in the solution, notify the user and return
 	if #projects == 0 then
 		vim.notify("No projects in solution", vim.log.levels.ERROR)
 		return
 	end
 
-	local choice = picker.ask_user_for_choice("Add to", projects)
-	local project_to_add_to = choice
-
-	-- if the user did not select a project, return
-	if not choice then
-		vim.notify("No project chosen", vim.log.levels.ERROR)
-		return
-	end
-
-	-- remove the project we are adding to from the list of projects to add
-	for i, v in ipairs(projects) do
-		if v == project_to_add_to then
-			table.remove(projects, i)
-			break
+	-- Step 1: pick project to add to
+	picker.ask_user_for_choice("Add to", projects, function(project_to_add_to)
+		if not project_to_add_to then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
 		end
-	end
 
-	-- ask user for project to add
-	choice = picker.ask_user_for_choice("Add", projects)
+		-- Remove the chosen project from the list of candidates to reference
+		local candidates = {}
+		for _, v in ipairs(projects) do
+			if v ~= project_to_add_to then
+				table.insert(candidates, v)
+			end
+		end
 
-	-- if the user did not select a project, return
-	if not choice then
-		vim.notify("No project chosen", vim.log.levels.ERROR)
-		return
-	end
+		if #candidates == 0 then
+			vim.notify("No other projects to add as reference", vim.log.levels.WARN)
+			return
+		end
 
-	-- add project to project
-	async.handle_project_reference("add", project_to_add_to, choice)
+		-- Step 2: pick which project to reference
+		picker.ask_user_for_choice("Add", candidates, function(project_to_reference)
+			if not project_to_reference then
+				vim.notify("No project chosen", vim.log.levels.ERROR)
+				return
+			end
+
+			async.handle_project_reference("add", project_to_add_to, project_to_reference)
+		end)
+	end)
 end
 
---- remove project from project
+--- Remove a project reference
 function M.remove_project_reference()
-	-- get all projects in the solution
 	local projects = utils.get_all_projects_in_solution()
-
-	-- If there are no projects in the solution, notify the user and return
 	if #projects == 0 then
 		vim.notify("No projects in solution", vim.log.levels.ERROR)
 		return
 	end
 
-	local choice = picker.ask_user_for_choice("Remove from", projects)
-	local project_to_remove_from = choice
+	-- Step 1: pick project to remove from
+	picker.ask_user_for_choice("Remove from", projects, function(project_to_remove_from)
+		if not project_to_remove_from then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
 
-	-- if the user did not select a project, return
-	if not choice then
-		vim.notify("No project chosen", vim.log.levels.ERROR)
-		return
-	end
+		-- Fetch references for that project
+		local project_references = utils.get_project_references(project_to_remove_from)
+		if #project_references == 0 then
+			vim.notify("No project references in " .. project_to_remove_from, vim.log.levels.WARN)
+			return
+		end
 
-	-- get all project references for the selected project
-	local project_references = utils.get_project_references(project_to_remove_from)
+		-- Step 2: pick which reference to remove
+		picker.ask_user_for_choice("Remove", project_references, function(reference_choice)
+			if not reference_choice then
+				vim.notify("No project chosen", vim.log.levels.ERROR)
+				return
+			end
 
-	-- ask user for project to remove
-	choice = picker.ask_user_for_choice("Remove", project_references)
-
-	-- if the user did not select a project, return
-	if not choice then
-		vim.notify("No project chosen", vim.log.levels.ERROR)
-		return
-	end
-
-	-- remove project from project
-	async.handle_project_reference("remove", project_to_remove_from, choice)
+			async.handle_project_reference("remove", project_to_remove_from, reference_choice)
+		end)
+	end)
 end
 
---- add project to solution
+--- Add a project to the solution
 function M.add_project_to_solution()
-	-- get all projects in the solution folder and in the solution respectively
 	local all_csproj_files = utils.get_all_projects_in_solution_folder_not_in_solution()
 	local projects_in_solution = utils.get_all_projects_in_solution()
 
+	-- Filter to only those not already in the solution
 	local projects_not_in_solution = {}
-
-	-- find all csproj files that are not in the solution
 	for _, csproj_file in ipairs(all_csproj_files) do
 		if not utils.has_value(projects_in_solution, csproj_file) then
 			table.insert(projects_not_in_solution, csproj_file)
 		end
 	end
 
-	if not projects_not_in_solution then
+	if not projects_not_in_solution or #projects_not_in_solution == 0 then
 		vim.notify("No csproj files that are not already in solution", vim.log.levels.WARN)
 		return
 	end
 
-	-- ask user for project to add to solution
-	local choice = picker.ask_user_for_choice("Add", projects_not_in_solution)
+	picker.ask_user_for_choice("Add", projects_not_in_solution, function(choice)
+		if not choice then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
 
-	-- if the user did not select a project, return
-	if not choice then
-		vim.notify("No project chosen", vim.log.levels.ERROR)
-		return
-	end
-
-	-- add project to solution
-	async.add_project_to_solution(choice)
+		async.add_project_to_solution(choice)
+	end)
 end
 
 return M

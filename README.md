@@ -29,9 +29,25 @@ Using lazy package manager:
 ```lua
 "JesperLundberg/projektgunnar.nvim",
 dependencies = {
-    "echasnovski/mini.pick",
+    "nvim-telescope/telescope.nvim", -- Choose either telescope...
+    "nvim-mini/mini.pick", -- ...or mini.pick
     "nvim-lua/plenary.nvim",
 },
+```
+
+#### Config
+
+```lua
+-- Default config
+local defaults = {
+	prefer = { "telescope", "mini" },
+}
+
+-- If you have both and want mini.pick set mini
+
+local defaults = {
+	prefer = { "mini" },
+}
 ```
 
 #### Available commands
@@ -69,4 +85,4 @@ nvim --headless --noplugin -u tests/minimal.vim -c "PlenaryBustedDirectory tests
 
 [Issafalcon](https://github.com/Issafalcon/) - for being patient with questions and giving me clues on what to look into.
 
-[echasnovski](https://github.com/echasnovski) - for creating the mini library and in this case mini.pick and mini.nofity which I am using here.
+[echasnovski](https://github.com/echasnovski) - for creating the mini library and in this case mini.pick which I am using here.
