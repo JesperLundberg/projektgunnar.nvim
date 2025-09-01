@@ -6,16 +6,16 @@ local M = {}
 local function ui(fn, ...)
 	local args = { ... }
 	vim.schedule(function()
-		-- pcall to avoid cascading errors if buffer was closed etc.
 		pcall(fn, unpack(args))
 	end)
 end
 
--- Run a queue of commands sequentially (no coroutines).
--- command_and_items: {
---   { command = "dotnet add <proj> package ", items = { "PkgA", "PkgB" } },
---   { command = "dotnet add <proj> package ", items = { "PkgC" } },
--- }
+-- Run a queue of commands sequentially (no coroutines, no shell).
+-- Each entry shape:
+--   {
+--     argv  = { "dotnet", "add", "<project.csproj>", "package" }, -- base argv
+--     items = { "Newtonsoft.Json", "Serilog" },                   -- appended one-by-one
+--   }
 local function run_queue(buf, command_and_items)
 	local total_commands = #command_and_items
 	local ci, ii = 1, 0 -- command index, item index
@@ -23,12 +23,10 @@ local function run_queue(buf, command_and_items)
 	local function step()
 		local entry = command_and_items[ci]
 		if not entry then
-			-- All commands are done
 			ui(floating_window.update_with_done_message, buf)
 			return
 		end
 
-		-- Starting a new command group? Update header/progress
 		if ii == 0 then
 			ui(floating_window.update_progress, buf, ci, total_commands)
 		end
@@ -36,7 +34,6 @@ local function run_queue(buf, command_and_items)
 		ii = ii + 1
 		local item = entry.items[ii]
 
-		-- End of this group → move to the next group
 		if not item then
 			ci = ci + 1
 			ii = 0
@@ -44,17 +41,18 @@ local function run_queue(buf, command_and_items)
 			return
 		end
 
-		local cmd = entry.command .. item
+		-- Build argv for this item: copy base argv and append item
+		local argv = vim.deepcopy(entry.argv or {})
+		table.insert(argv, item)
 
-		-- Run command asynchronously; callback executes when the process exits
-		vim.system({ "sh", "-c", cmd }, { text = true }, function(result)
+		vim.system(argv, { text = true }, function(result)
 			local success = (result.code == 0)
 			local total_items = #entry.items
 
-			-- Schedule UI update to run in the UI thread
-			ui(floating_window.update, buf, ii, total_items, success, cmd)
+			-- For display, create a readable command string
+			local display_cmd = table.concat(argv, " ")
 
-			-- Continue with the next item/group
+			ui(floating_window.update, buf, ii, total_items, success, display_cmd)
 			vim.schedule(step)
 		end)
 	end
@@ -64,10 +62,9 @@ end
 
 --- Add or update nugets in a project/solution
 --- @param action string -- e.g. "Adding"/"Updating" (used only for the message)
---- @param command_and_nugets table
+--- @param command_and_nugets table -- entries with { argv = {...}, items = {...} }
 function M.handle_nugets_in_project(action, command_and_nugets)
 	local buf = floating_window.open()
-
 	local project_or_solution = (#command_and_nugets == 1) and " project" or " solution"
 	ui(floating_window.print_message, buf, action .. " nugets in" .. project_or_solution)
 
@@ -97,7 +94,7 @@ function M.handle_project_reference(action, project_path, project_reference_path
 
 	local command_and_project = {
 		{
-			command = "dotnet " .. action .. " " .. project_path .. " reference ",
+			argv = { "dotnet", action, project_path, "reference" },
 			items = { project_reference_path },
 		},
 	}
@@ -113,7 +110,10 @@ function M.add_project_to_solution(project_to_add_path)
 	ui(floating_window.print_message, buf, "Adding project " .. project_to_add_path .. " to solution")
 
 	local command_and_project = {
-		{ command = "dotnet sln add ", items = { project_to_add_path } },
+		{
+			argv = { "dotnet", "sln", "add" },
+			items = { project_to_add_path },
+		},
 	}
 
 	run_queue(buf, command_and_project)
