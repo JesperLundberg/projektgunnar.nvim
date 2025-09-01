@@ -155,8 +155,7 @@ describe("main", function()
 			-- Assert that async.handle_nugets_in_project was called with the correct arguments
 			assert.stub(async_handle_nugets_in_project).was_called_with("Remove", {
 				{
-					project = "proj1",
-					command = "dotnet remove proj1 package ",
+					argv = { "dotnet", "remove", "proj1", "package" },
 					items = { "Moq" },
 				},
 			})
@@ -211,8 +210,7 @@ describe("main", function()
 			-- Assert that async.handle_nugets_in_project was called with the correct arguments
 			assert.stub(async_handle_nugets_in_project).was_called_with("Update", {
 				{
-					project = "proj1",
-					command = "dotnet add proj1 package ", -- Updating and adding a NuGet is the same command
+					argv = { "dotnet", "add", "proj1", "package" }, -- Updating and adding a NuGet is the same command
 					items = { "Moq", "NUnit" },
 				},
 			})
