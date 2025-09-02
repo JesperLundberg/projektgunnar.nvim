@@ -36,7 +36,7 @@ local function run_queue(buf, command_and_items)
 				table.insert(argv, item)
 
 				-- Execute the command and await completion
-				local _, stderr, code = async.system(argv, { text = true })
+				local _, _, code = async.system(argv, { text = true })
 
 				-- Update per-item status in the floating window
 				local success = (code == 0)
