@@ -31,8 +31,8 @@ function M.add_nuget_to_project()
 
 			local command_and_nuget_to_add = {
 				{
-					project = choice,
-					command = "dotnet add " .. choice .. " package ",
+					-- dotnet add <project> package <item>
+					argv = { "dotnet", "add", choice, "package" },
 					items = { nuget_to_add },
 				},
 			}
@@ -73,8 +73,8 @@ function M.remove_nuget_from_project()
 
 			local command_and_nuget_to_remove = {
 				{
-					project = project_choice,
-					command = "dotnet remove " .. project_choice .. " package ",
+					-- dotnet remove <project> package <item>
+					argv = { "dotnet", "remove", project_choice, "package" },
 					items = { nuget_to_remove },
 				},
 			}
@@ -109,8 +109,8 @@ function M.update_nugets_in_project()
 
 		local command_and_nugets = {
 			{
-				project = project_choice,
-				command = "dotnet add " .. project_choice .. " package ",
+				-- dotnet add <project> package <item>
+				argv = { "dotnet", "add", project_choice, "package" },
 				items = outdated_nugets,
 			},
 		}
@@ -135,8 +135,8 @@ function M.update_nugets_in_solution()
 		else
 			local command_and_nugets = {
 				{
-					project = project,
-					command = "dotnet add " .. project .. " package ",
+					-- dotnet add <project> package <item>
+					argv = { "dotnet", "add", project, "package" },
 					items = outdated_nugets,
 				},
 			}
