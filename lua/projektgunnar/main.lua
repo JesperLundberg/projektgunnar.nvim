@@ -1,4 +1,4 @@
-local async = require("projektgunnar.async")
+local dotnet_jobs = require("projektgunnar.dotnet_jobs")
 local utils = require("projektgunnar.utils")
 local nugets = require("projektgunnar.nugets")
 local picker = require("projektgunnar.picker")
@@ -37,7 +37,7 @@ function M.add_nuget_to_project()
 				},
 			}
 
-			async.handle_nugets_in_project("Add", command_and_nuget_to_add)
+			dotnet_jobs.handle_nugets_in_project("Add", command_and_nuget_to_add)
 		end)
 	end, { title = "Nuget to add" })
 end
@@ -79,7 +79,7 @@ function M.remove_nuget_from_project()
 				},
 			}
 
-			async.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
+			dotnet_jobs.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
 		end)
 	end)
 end
@@ -115,7 +115,7 @@ function M.update_nugets_in_project()
 			},
 		}
 
-		async.handle_nugets_in_project("Update", command_and_nugets)
+		dotnet_jobs.handle_nugets_in_project("Update", command_and_nugets)
 	end)
 end
 
@@ -149,7 +149,7 @@ function M.update_nugets_in_solution()
 		return
 	end
 
-	async.handle_nugets_in_project("Update", all_projects_and_nugets)
+	dotnet_jobs.handle_nugets_in_project("Update", all_projects_and_nugets)
 end
 
 --- Add a project reference
@@ -187,7 +187,7 @@ function M.add_project_reference()
 				return
 			end
 
-			async.handle_project_reference("add", project_to_add_to, project_to_reference)
+			dotnet_jobs.handle_project_reference("add", project_to_add_to, project_to_reference)
 		end)
 	end)
 end
@@ -221,7 +221,7 @@ function M.remove_project_reference()
 				return
 			end
 
-			async.handle_project_reference("remove", project_to_remove_from, reference_choice)
+			dotnet_jobs.handle_project_reference("remove", project_to_remove_from, reference_choice)
 		end)
 	end)
 end
@@ -250,7 +250,7 @@ function M.add_project_to_solution()
 			return
 		end
 
-		async.add_project_to_solution(choice)
+		dotnet_jobs.add_project_to_solution(choice)
 	end)
 end
 
