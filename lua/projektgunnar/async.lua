@@ -1,122 +1,88 @@
-local floating_window = require("projektgunnar.floating_window")
+-- lua/projektgunnar/async.lua
+-- Minimal coroutine-based async helpers for Neovim.
+-- Provides: run, wrap_cb, system, ui (works both inside and outside coroutines).
 
 local M = {}
+local unpack = unpack or table.unpack
 
--- Helper: schedule UI-affecting calls so they don't run in a fast event context
-local function ui(fn, ...)
-	local args = { ... }
+-- Safely resume a coroutine on the main loop (avoids "yield across C boundary")
+local function resume_on_main(co, ...)
+	local args = { ... } -- capture varargs in this scope
 	vim.schedule(function()
-		pcall(fn, unpack(args))
+		local ok, ret = coroutine.resume(co, unpack(args))
+		if not ok then
+			vim.notify("Async error: " .. tostring(ret), vim.log.levels.ERROR)
+			return
+		end
+		if type(ret) == "function" then
+			-- The coroutine yielded a thunk; call it with a resume callback
+			ret(function(...)
+				resume_on_main(co, ...)
+			end)
+		end
 	end)
 end
 
--- Run a queue of commands sequentially (no coroutines, no shell).
--- Each entry shape:
---   {
---     argv  = { "dotnet", "add", "<project.csproj>", "package" }, -- base argv
---     items = { "Newtonsoft.Json", "Serilog" },                   -- appended one-by-one
---   }
-local function run_queue(buf, command_and_items)
-	local total_commands = #command_and_items
-	local ci, ii = 1, 0 -- command index, item index
+--- Start a coroutine-based async flow
+--- @param fn function
+function M.run(fn, ...)
+	local co = coroutine.create(fn)
+	resume_on_main(co, ...)
+end
 
-	local function step()
-		local entry = command_and_items[ci]
-		if not entry then
-			ui(floating_window.update_with_done_message, buf)
-			return
-		end
-
-		if ii == 0 then
-			ui(floating_window.update_progress, buf, ci, total_commands)
-		end
-
-		ii = ii + 1
-		local item = entry.items[ii]
-
-		if not item then
-			ci = ci + 1
-			ii = 0
-			vim.schedule(step)
-			return
-		end
-
-		-- Build argv for this item: copy base argv and append item
-		local argv = vim.deepcopy(entry.argv or {})
-		table.insert(argv, item)
-
-		vim.system(argv, { text = true }, function(result)
-			local success = (result.code == 0)
-			local total_items = #entry.items
-
-			-- For display, create a readable command string
-			local display_cmd = table.concat(argv, " ")
-
-			ui(floating_window.update, buf, ii, total_items, success, display_cmd)
-			vim.schedule(step)
+--- Wrap a callback-last function: fn(..., cb) -> awaitable(...)
+--- The returned function can be called inside a coroutine to "await" the result.
+function M.wrap_cb(fn)
+	return function(...)
+		local args = { ... }
+		return coroutine.yield(function(resume)
+			table.insert(args, resume)
+			fn(unpack(args))
 		end)
 	end
-
-	step()
 end
 
---- Add or update nugets in a project/solution
---- @param action string -- e.g. "Adding"/"Updating" (used only for the message)
---- @param command_and_nugets table -- entries with { argv = {...}, items = {...} }
-function M.handle_nugets_in_project(action, command_and_nugets)
-	local buf = floating_window.open()
-	local project_or_solution = (#command_and_nugets == 1) and " project" or " solution"
-	ui(floating_window.print_message, buf, action .. " nugets in" .. project_or_solution)
-
-	run_queue(buf, command_and_nugets)
+--- Await a vim.system call
+--- @param cmd string[] argv
+--- @param opts table|nil (will force { text = true } unless overridden)
+--- @return string[] lines, string stderr, integer code
+function M.system(cmd, opts)
+	opts = vim.tbl_extend("force", { text = true }, opts or {})
+	return M.wrap_cb(function(cb)
+		vim.system(cmd, opts, function(obj)
+			local lines = vim.split(obj.stdout or "", "\n", { trimempty = true })
+			cb(lines, obj.stderr or "", obj.code or -1)
+		end)
+	end)()
 end
 
---- Add or remove a project reference
---- @param action string -- "add" or "remove"
---- @param project_path string
---- @param project_reference_path string
-function M.handle_project_reference(action, project_path, project_reference_path)
-	local buf = floating_window.open()
+--- UI helper that works both inside and outside coroutines.
+--- - If inside a coroutine: yields until the UI function has run (awaitable).
+--- - If not inside a coroutine: schedules the UI function and returns immediately (no yield).
+function M.ui(fn, ...)
+	local args = { ... }
 
-	if action == "add" then
-		ui(
-			floating_window.print_message,
-			buf,
-			"Adding project " .. project_reference_path .. " to project " .. project_path
-		)
-	else
-		ui(
-			floating_window.print_message,
-			buf,
-			"Removing project " .. project_reference_path .. " from project " .. project_path
-		)
+	-- Not inside a coroutine: cannot yield; just schedule and return.
+	if coroutine.running() == nil then
+		vim.schedule(function()
+			local ok, err = pcall(fn, unpack(args))
+			if not ok then
+				vim.notify("UI error: " .. tostring(err), vim.log.levels.ERROR)
+			end
+		end)
+		return
 	end
 
-	local command_and_project = {
-		{
-			argv = { "dotnet", action, project_path, "reference" },
-			items = { project_reference_path },
-		},
-	}
-
-	run_queue(buf, command_and_project)
-end
-
---- Add a project to the current solution
---- @param project_to_add_path string
-function M.add_project_to_solution(project_to_add_path)
-	local buf = floating_window.open()
-
-	ui(floating_window.print_message, buf, "Adding project " .. project_to_add_path .. " to solution")
-
-	local command_and_project = {
-		{
-			argv = { "dotnet", "sln", "add" },
-			items = { project_to_add_path },
-		},
-	}
-
-	run_queue(buf, command_and_project)
+	-- Inside coroutine: make it awaitable by yielding a thunk.
+	return M.wrap_cb(function(cb)
+		vim.schedule(function()
+			local ok, err = pcall(fn, unpack(args))
+			if not ok then
+				vim.notify("UI error: " .. tostring(err), vim.log.levels.ERROR)
+			end
+			cb()
+		end)
+	end)()
 end
 
 return M
