@@ -1,16 +1,7 @@
--- lua/projektgunnar/dotnet_jobs.lua
--- Domain-specific runner for dotnet commands with floating window progress.
--- Now using a linear coroutine flow via projektgunnar.async.
-
 local floating_window = require("projektgunnar.floating_window")
 local async = require("projektgunnar.async")
 
 local M = {}
-
--- Build a readable command string from argv for UI/logging
-local function to_display_cmd(argv)
-	return table.concat(argv or {}, " ")
-end
 
 -- Run a queue of commands sequentially as a linear async flow.
 -- Each entry shape:
@@ -26,13 +17,13 @@ local function run_queue(buf, command_and_items)
 			-- Update high-level progress (which command in the queue)
 			async.ui(floating_window.update_progress, buf, ci, total_commands)
 
-			local base = entry.argv or {}
+			local base_command = entry.argv or {}
 			local items = entry.items or {}
 			local total_items = #items
 
 			for ii, item in ipairs(items) do
 				-- Build argv per item: copy base and append item
-				local argv = vim.deepcopy(base)
+				local argv = vim.deepcopy(base_command)
 				table.insert(argv, item)
 
 				-- Execute the command and await completion
@@ -40,7 +31,12 @@ local function run_queue(buf, command_and_items)
 
 				-- Update per-item status in the floating window
 				local success = (code == 0)
-				async.ui(floating_window.update, buf, ii, total_items, success, to_display_cmd(argv))
+
+				-- Create a string out of the arguments to print
+				local argsToPrint = (table.concat(argv or {}, " "))
+
+				-- Write each command and its result in the floating window
+				async.ui(floating_window.update, buf, ii, total_items, success, argsToPrint)
 			end
 		end
 
