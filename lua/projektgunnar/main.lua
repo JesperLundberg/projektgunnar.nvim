@@ -2,14 +2,14 @@ local dotnet_jobs = require("projektgunnar.dotnet_jobs")
 local utils = require("projektgunnar.utils")
 local nugets = require("projektgunnar.nugets")
 local picker = require("projektgunnar.picker")
-local input_window = require("projektgunnar.input_window")
+local ui = require("projektgunnar.ui")
 
 local M = {}
 
 --- Add NuGet to a project
 function M.add_nuget_to_project()
 	-- Ask for the NuGet package first
-	input_window.input_window(function(nuget_to_add)
+	ui.input.open(function(nuget_to_add)
 		if nuget_to_add == "" then
 			vim.notify("No nuget selected", vim.log.levels.ERROR)
 			return
