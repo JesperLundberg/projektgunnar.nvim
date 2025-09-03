@@ -56,30 +56,30 @@ function M.system(cmd, opts)
 	end)()
 end
 
---- UI helper that works both inside and outside coroutines.
---- - If inside a coroutine: yields until the UI function has run (awaitable).
---- - If not inside a coroutine: schedules the UI function and returns immediately (no yield).
 function M.ui(fn, ...)
 	local args = { ... }
 
+	local function run()
+		local ok, err = xpcall(function()
+			return fn(unpack(args))
+		end, function(e)
+			return debug.traceback("UI error: " .. tostring(e), 2)
+		end)
+		if not ok then
+			vim.notify(err, vim.log.levels.ERROR)
+		end
+	end
+
 	-- Not inside a coroutine: cannot yield; just schedule and return.
 	if coroutine.running() == nil then
-		vim.schedule(function()
-			local ok, err = pcall(fn, unpack(args))
-			if not ok then
-				vim.notify("UI error: " .. tostring(err), vim.log.levels.ERROR)
-			end
-		end)
+		vim.schedule(run)
 		return
 	end
 
 	-- Inside coroutine: make it awaitable by yielding a thunk.
 	return M.wrap_cb(function(cb)
 		vim.schedule(function()
-			local ok, err = pcall(fn, unpack(args))
-			if not ok then
-				vim.notify("UI error: " .. tostring(err), vim.log.levels.ERROR)
-			end
+			run()
 			cb()
 		end)
 	end)()
