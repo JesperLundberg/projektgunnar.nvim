@@ -9,7 +9,7 @@ local M = {
 -- Utils: sizing/centering
 -- ======================
 
--- Get the drawable editor size from the active UI (handles cmdheight/tabline properly)
+-- Return drawable editor size (accounts for cmdheight/tabline properly)
 local function editor_size()
 	local ui = api.nvim_list_uis()[1]
 	if ui then
@@ -18,7 +18,7 @@ local function editor_size()
 	return vim.o.columns, vim.o.lines
 end
 
---- Calculate centered window position and size
+--- Calculate centered window position and size for given content width/height
 --- @param width integer content width
 --- @param height integer content height
 --- @return {width: integer, height: integer, row: integer, col: integer}
@@ -36,7 +36,7 @@ local function centered_opts(width, height)
 	}
 end
 
---- UTF-8 + wide-char safe centering for a single line
+--- UTF-8 + wide-char safe centering for a single line (uses display width)
 --- @param s string
 local function center_line(s)
 	local width = api.nvim_win_get_width(0)
@@ -60,7 +60,7 @@ local function with_modifiable(buf, fn)
 	end
 end
 
---- Replace buffer lines from start_idx to end with given lines
+--- Replace buffer lines from start_idx to end (-1) with given lines
 local function set_lines(buf, start_idx, lines)
 	with_modifiable(buf, function()
 		api.nvim_buf_set_lines(buf, start_idx, -1, false, lines)
@@ -85,7 +85,7 @@ end
 local function open_float(opts)
 	local buf = api.nvim_create_buf(false, true)
 
-	-- Buffer-local options (ephemeral scratch)
+	-- Buffer options for ephemeral scratch behavior
 	vim.bo[buf].bufhidden = "wipe"
 	vim.bo[buf].filetype = "projektgunnar"
 	vim.bo[buf].buftype = "nofile"
@@ -94,14 +94,14 @@ local function open_float(opts)
 	vim.bo[buf].modifiable = false
 	vim.bo[buf].readonly = false
 
-	-- Open window
+	-- Open the floating window
 	local win = api.nvim_open_win(
 		buf,
 		true,
 		vim.tbl_extend("force", {
 			style = "minimal",
 			relative = "editor",
-			border = "rounded", -- Or a custom 8-char table if you prefer
+			border = "rounded",
 			title = opts.title or "",
 			title_pos = "center",
 			noautocmd = true,
@@ -151,72 +151,114 @@ local function recenter_on_resize(win, width, height)
 end
 
 -- ======================
--- Spinner: timer-based per buffer
+-- Spinner: dedicated line, timer-based, idempotent cleanup
 -- ======================
 
-local spinners = {} -- buf -> {timer=uv_timer, idx=int}
+-- Active spinner state (only present while running)
+--   spinners[buf] = { timer = uv_timer, idx = int, line = int }
+local spinners = {}
+
+-- Remember the last spinner line even after stopping (for clean stripping)
+--   last_spinner_line[buf] = int
+local last_spinner_line = {}
+
 local spinner_chars = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+
+-- Safe, idempotent timer close
+local function safe_close_timer(t)
+	if not t then
+		return
+	end
+	pcall(function()
+		t:stop()
+	end)
+	local ok, closing = pcall(function()
+		return t:is_closing()
+	end)
+	if ok and closing then
+		return
+	end
+	pcall(function()
+		t:close()
+	end)
+end
 
 ---@diagnostic disable: need-check-nil
 local function spinner_start(buf, interval_ms)
-	if spinners[buf] then
+	-- If a spinner is already running for this buffer, do nothing
+	if spinners[buf] and spinners[buf].timer then
 		return
 	end
-	local timer = vim.uv.new_timer()
-	local idx = 1
 
+	-- Allocate a dedicated line *after* current content and ensure it exists
+	local curr = api.nvim_buf_get_lines(buf, 0, -1, false)
+	local spinner_line = #curr + 1
+	with_modifiable(buf, function()
+		api.nvim_buf_set_lines(buf, spinner_line - 1, spinner_line - 1, false, { "" })
+	end)
+
+	local timer = vim.uv.new_timer()
+	if not timer then
+		return
+	end
+
+	local idx = 1
 	timer:start(
 		0,
 		interval_ms or 80,
 		vim.schedule_wrap(function()
 			if not api.nvim_buf_is_valid(buf) then
-				timer:stop()
-				timer:close()
+				-- Buffer gone; stop and clear state
+				if spinners[buf] then
+					last_spinner_line[buf] = spinners[buf].line or last_spinner_line[buf]
+				end
+				safe_close_timer(timer)
 				spinners[buf] = nil
 				return
 			end
+
+			-- Update only the dedicated spinner line
 			with_modifiable(buf, function()
-				local curr = api.nvim_buf_get_lines(buf, 0, -1, false)
-				if #curr == 0 then
-					curr = { "" }
-				end
-				local last = curr[#curr] or ""
-
-				-- Strip a single leading UTF-8 char and optional space (previous spinner)
-				local stripped = last:gsub("^[%z\1-\127\194-\244][\128-\191]*%s?", "")
-
-				curr[#curr] = spinner_chars[idx] .. " " .. stripped
-				api.nvim_buf_set_lines(buf, 0, -1, false, curr)
+				local line = api.nvim_buf_get_lines(buf, spinner_line - 1, spinner_line, false)[1] or ""
+				-- Strip previous spinner glyph + optional space on this line only
+				local stripped = line:gsub("^[%z\1-\127\194-\244][\128-\191]*%s?", "")
+				api.nvim_buf_set_lines(buf, spinner_line - 1, spinner_line, false, {
+					spinner_chars[idx] .. " " .. stripped,
+				})
 			end)
+
 			idx = (idx % #spinner_chars) + 1
 		end)
 	)
-	---@diagnostic enable: need-check-nil
 
-	spinners[buf] = { timer = timer, idx = 1 }
+	spinners[buf] = { timer = timer, idx = 1, line = spinner_line }
+	last_spinner_line[buf] = spinner_line
 
-	-- Auto-stop when buffer is wiped
+	-- Auto-stop on wipe
 	api.nvim_create_autocmd("BufWipeout", {
 		buffer = buf,
 		once = true,
 		callback = function()
 			local s = spinners[buf]
 			if s then
-				s.timer:stop()
-				s.timer:close()
+				last_spinner_line[buf] = s.line or last_spinner_line[buf]
+			end
+			if s and s.timer then
+				safe_close_timer(s.timer)
 			end
 			spinners[buf] = nil
 		end,
 	})
 end
+---@diagnostic enable: need-check-nil
 
 local function spinner_stop(buf)
 	local s = spinners[buf]
 	if not s then
 		return
 	end
-	s.timer:stop()
-	s.timer:close()
+	last_spinner_line[buf] = s.line or last_spinner_line[buf]
+	safe_close_timer(s.timer)
 	spinners[buf] = nil
 end
 
@@ -224,7 +266,7 @@ end
 -- Public API: Input popup
 -- ======================
 
---- Open a centered one-line input popup
+--- Open a centered one-line input popup (title in border; buffer is editable)
 --- @param on_confirm fun(text: string)
 --- @param opts? { title?: string, width?: integer }
 function M.input.open(on_confirm, opts)
@@ -232,25 +274,22 @@ function M.input.open(on_confirm, opts)
 	local title = opts.title or ""
 	local width = opts.width or 25
 
-	-- Only one content line for typing. Title is shown in the window border.
+	-- One content line for typing; title lives in border
 	local input_height = 1
 	local c = centered_opts(width, input_height)
 
-	-- Open float with a border title; no extra title line in the buffer
 	local win, buf = open_float({
 		width = c.width,
 		height = c.height,
 		row = c.row,
 		col = c.col,
-		title = title, -- shown in the border
+		title = title,
 	})
 
 	recenter_on_resize(win, c.width, c.height)
 
-	-- Initialize the buffer with a single empty line
+	-- Initialize the buffer with a single empty line and make it editable
 	set_lines(buf, 0, { "" })
-
-	-- IMPORTANT: allow typing
 	vim.bo[buf].modifiable = true
 	vim.bo[buf].readonly = false
 
@@ -273,7 +312,7 @@ function M.input.open(on_confirm, opts)
 		end
 	end
 
-	-- Close on BufLeave (nice for transient UI)
+	-- Close on BufLeave (transient UI behavior)
 	api.nvim_create_autocmd("BufLeave", {
 		buffer = buf,
 		once = true,
@@ -301,6 +340,9 @@ end
 -- Public API: Result window
 -- ======================
 
+-- Number of header lines written at the top of the result buffer
+local RESULT_HEADER_LINES = 3
+
 --- Open a large centered result window (80% of editor)
 --- @return integer buf
 function M.result.open()
@@ -314,29 +356,33 @@ function M.result.open()
 		height = c.height,
 		row = c.row,
 		col = c.col,
-		title = "ProjektGunnar", -- keep title in border only
+		title = "ProjektGunnar",
 	})
 
 	recenter_on_resize(win, c.width, c.height)
 
-	-- Header/help text without duplicating the title
+	-- Header/help text (no duplicate title in buffer)
 	set_lines(buf, 0, {
 		center_line("Close window with 'q'"),
 		"",
 		"",
 	})
 
+	-- Close with 'q' (stop spinner first), then close the window
 	local kmopts = { buffer = buf, silent = true, noremap = true, nowait = true, desc = "Close result window" }
 	vim.keymap.set("n", "q", function()
+		spinner_stop(buf)
 		if api.nvim_win_is_valid(win) then
 			pcall(api.nvim_win_close, win, true)
 		end
 	end, kmopts)
 
+	-- Also close on BufLeave
 	api.nvim_create_autocmd("BufLeave", {
 		buffer = buf,
 		once = true,
 		callback = function()
+			spinner_stop(buf)
 			if api.nvim_win_is_valid(win) then
 				pcall(api.nvim_win_close, win, true)
 			end
@@ -350,7 +396,8 @@ end
 --- @param buf integer
 --- @param msg string
 function M.result.print(buf, msg)
-	set_lines(buf, 5, { msg, "----------------------------------------" })
+	-- Replace from first content line after header
+	set_lines(buf, RESULT_HEADER_LINES, { msg, "----------------------------------------" })
 end
 
 --- Append a progress line ("Updating project X of Y")
@@ -364,7 +411,7 @@ function M.result.progress(buf, index, total)
 	})
 end
 
---- Append a result block for one command (no highlights, as requested)
+--- Append a result block for one command (no highlights)
 --- @param buf integer
 --- @param index integer
 --- @param total integer
@@ -381,31 +428,36 @@ function M.result.update(buf, index, total, success, cmd)
 	})
 end
 
---- Start/update spinner on the last line (timer-driven)
---- Public API: keep name but delegate to the timer-based spinner
+--- Start the spinner (allocates a dedicated line below current content)
 --- @param buf integer
 function M.result.spinner(buf)
 	spinner_start(buf, 80)
 end
 
---- Remove spinner and keep the text without the spinner prefix
+--- Clear the spinner glyph on its dedicated line (keep the line)
 --- @param buf integer
 function M.result.clear_spinner(buf)
+	-- Stop the timer if running
 	spinner_stop(buf)
-	-- Strip spinner char if present on the last line
+	local line = (spinners[buf] and spinners[buf].line) or last_spinner_line[buf]
+	if not line then
+		-- Fallback to last line of buffer
+		line = api.nvim_buf_line_count(buf)
+	end
 	with_modifiable(buf, function()
-		local curr = api.nvim_buf_get_lines(buf, 0, -1, false)
-		if #curr == 0 then
-			return
+		local curr = api.nvim_buf_get_lines(buf, line - 1, line, false)
+		if #curr == 1 then
+			curr[1] = (curr[1] or ""):gsub("^[%z\1-\127\194-\244][\128-\191]*%s?", "")
+			api.nvim_buf_set_lines(buf, line - 1, line, false, { curr[1] })
 		end
-		curr[#curr] = (curr[#curr] or ""):gsub("^[%z\1-\127\194-\244][\128-\191]*%s?", "")
-		api.nvim_buf_set_lines(buf, 0, -1, false, curr)
 	end)
 end
 
---- Append a final "Done!" block
+--- Append a final "Done!" block, stopping/stripping spinner first
 --- @param buf integer
 function M.result.done(buf)
+	-- Ensure spinner is stopped and glyph is stripped on its line
+	M.result.clear_spinner(buf)
 	append_lines(buf, { "Done!", "----------------------------------------" })
 end
 
