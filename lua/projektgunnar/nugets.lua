@@ -38,9 +38,9 @@ local function parse_packages(stdout)
 	for line in stdout:gmatch("[^\r\n]+") do
 		-- dotnet marks package rows with '>' (works across SDK versions/locales)
 		if line:find(">", 1, true) then
-			local last = line:match("(%S+)%s*$")
-			if last and last ~= ">" then
-				table.insert(pkgs, last)
+			local name = line:match("^%s*>%s*(%S+)")
+			if name and name ~= ">" then
+				table.insert(pkgs, name)
 			end
 		end
 	end

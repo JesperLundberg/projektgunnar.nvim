@@ -434,23 +434,26 @@ function M.result.spinner(buf)
 	spinner_start(buf, 80)
 end
 
---- Clear the spinner glyph on its dedicated line (keep the line)
+--- Clear spinner and remove its dedicated line entirely
 --- @param buf integer
 function M.result.clear_spinner(buf)
 	-- Stop the timer if running
 	spinner_stop(buf)
+
+	-- Find the spinner line (prefer active state, fall back to last known)
 	local line = (spinners[buf] and spinners[buf].line) or last_spinner_line[buf]
 	if not line then
-		-- Fallback to last line of buffer
-		line = api.nvim_buf_line_count(buf)
+		-- Nothing to remove
+		return
 	end
+
+	-- Remove the line completely so the next content starts at the same index
 	with_modifiable(buf, function()
-		local curr = api.nvim_buf_get_lines(buf, line - 1, line, false)
-		if #curr == 1 then
-			curr[1] = (curr[1] or ""):gsub("^[%z\1-\127\194-\244][\128-\191]*%s?", "")
-			api.nvim_buf_set_lines(buf, line - 1, line, false, { curr[1] })
-		end
+		api.nvim_buf_set_lines(buf, line - 1, line, false, {})
 	end)
+
+	-- Clear saved pointer
+	last_spinner_line[buf] = nil
 end
 
 --- Append a final "Done!" block, stopping/stripping spinner first

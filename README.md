@@ -31,7 +31,6 @@ Using lazy package manager:
 dependencies = {
     "nvim-telescope/telescope.nvim", -- Choose either telescope...
     "nvim-mini/mini.pick", -- ...or mini.pick
-    "nvim-lua/plenary.nvim",
 },
 ```
 
@@ -43,7 +42,7 @@ local defaults = {
 	prefer = { "telescope", "mini" },
 }
 
--- If you have both and want mini.pick set mini
+-- If you have both and want mini.pick set mini as only (or first in the list) choice
 
 local defaults = {
 	prefer = { "mini" },
@@ -84,5 +83,3 @@ nvim --headless --noplugin -u tests/minimal.vim -c "PlenaryBustedDirectory tests
 #### Credits
 
 [Issafalcon](https://github.com/Issafalcon/) - for being patient with questions and giving me clues on what to look into.
-
-[echasnovski](https://github.com/echasnovski) - for creating the mini library and in this case mini.pick which I am using here.

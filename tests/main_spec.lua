@@ -10,6 +10,7 @@ local utils = require("projektgunnar.utils")
 local picker = require("projektgunnar.picker")
 local dotnet_jobs = require("projektgunnar.dotnet_jobs")
 local nugets = require("projektgunnar.nugets")
+local async_ = require("projektgunnar.async")
 
 describe("main", function()
 	-- Define stub variables
@@ -22,6 +23,7 @@ describe("main", function()
 	local async_handle_nugets_in_project
 	local async_handle_project_reference
 	local async_add_project_to_solution
+	local async_stub
 	local nugets_all_nugets_stub
 	local nugets_outdated_nugets_stub
 
@@ -36,6 +38,12 @@ describe("main", function()
 	before_each(function()
 		-- Stub `vim.fn.input` and `vim.notify`
 		vim_notify_stub = stub(vim, "notify")
+
+		-- Make async.run synchronous for *all* tests
+		async_stub = stub(async_, "run")
+		async_stub.invokes(function(fn)
+			fn()
+		end)
 
 		-- Stubbing projektgunnar methods
 		utils_get_all_projects_in_solution_stub = stub(utils, "get_all_projects_in_solution")
@@ -72,6 +80,9 @@ describe("main", function()
 		end
 		if async_add_project_to_solution then
 			async_add_project_to_solution:revert()
+		end
+		if async_stub then
+			async_stub:revert()
 		end
 		if nugets_all_nugets_stub then
 			nugets_all_nugets_stub:revert()
@@ -202,7 +213,7 @@ describe("main", function()
 			stub_picker_choices({ "proj1" })
 
 			-- Stub nugets.outdated_nugets to return an a list
-			nugets_outdated_nugets_stub.returns({ "Moq", "NUnit" })
+			nugets_outdated_nugets_stub.returns({ "Moq", "NUnit" }, nil)
 
 			-- Call the function in main
 			sut.update_nugets_in_project()
