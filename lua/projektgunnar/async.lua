@@ -1,4 +1,3 @@
--- lua/projektgunnar/async.lua
 -- Minimal coroutine-based async helpers for Neovim.
 -- Provides: run, wrap_cb, system, ui (works both inside and outside coroutines).
 
