@@ -1,15 +1,16 @@
+local async = require("projektgunnar.async")
 local dotnet_jobs = require("projektgunnar.dotnet_jobs")
 local utils = require("projektgunnar.utils")
 local nugets = require("projektgunnar.nugets")
 local picker = require("projektgunnar.picker")
-local input_window = require("projektgunnar.input_window")
+local ui = require("projektgunnar.ui")
 
 local M = {}
 
---- Add NuGet to a project
+-- Add NuGet to a project
 function M.add_nuget_to_project()
 	-- Ask for the NuGet package first
-	input_window.input_window(function(nuget_to_add)
+	ui.input.open(function(nuget_to_add)
 		if nuget_to_add == "" then
 			vim.notify("No nuget selected", vim.log.levels.ERROR)
 			return
@@ -42,7 +43,7 @@ function M.add_nuget_to_project()
 	end, { title = "Nuget to add" })
 end
 
---- Remove a NuGet from a project
+-- Remove a NuGet from a project (now async to fetch package list)
 function M.remove_nuget_from_project()
 	local projects = utils.get_all_projects_in_solution()
 	if #projects == 0 then
@@ -57,34 +58,41 @@ function M.remove_nuget_from_project()
 			return
 		end
 
-		-- Fetch NuGets in the chosen project
-		local all_nugets = nugets.all_nugets(project_choice)
-		if #all_nugets == 0 then
-			vim.notify("No nugets in project " .. project_choice, vim.log.levels.WARN)
-			return
-		end
-
-		-- Pick which NuGet to remove
-		picker.ask_user_for_choice("Remove which", all_nugets, function(nuget_to_remove)
-			if not nuget_to_remove then
-				vim.notify("No nuget chosen", vim.log.levels.WARN)
+		-- Fetch NuGets in the chosen project asynchronously
+		async.run(function()
+			local all_pkgs, err = nugets.all_nugets(project_choice)
+			if err then
+				vim.notify("Failed to list packages: " .. err, vim.log.levels.ERROR)
 				return
 			end
 
-			local command_and_nuget_to_remove = {
-				{
-					-- dotnet remove <project> package <item>
-					argv = { "dotnet", "remove", project_choice, "package" },
-					items = { nuget_to_remove },
-				},
-			}
+			if not all_pkgs or #all_pkgs == 0 then
+				vim.notify("No nugets in project " .. project_choice, vim.log.levels.WARN)
+				return
+			end
 
-			dotnet_jobs.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
+			-- Pick which NuGet to remove
+			picker.ask_user_for_choice("Remove which", all_pkgs, function(nuget_to_remove)
+				if not nuget_to_remove then
+					vim.notify("No nuget chosen", vim.log.levels.WARN)
+					return
+				end
+
+				local command_and_nuget_to_remove = {
+					{
+						-- dotnet remove <project> package <item>
+						argv = { "dotnet", "remove", project_choice, "package" },
+						items = { nuget_to_remove },
+					},
+				}
+
+				dotnet_jobs.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
+			end)
 		end)
 	end)
 end
 
---- Update NuGets in a single project
+-- Update NuGets in a single project (async to compute outdated list)
 function M.update_nugets_in_project()
 	local projects = utils.get_all_projects_in_solution()
 	if #projects == 0 then
@@ -99,60 +107,75 @@ function M.update_nugets_in_project()
 			return
 		end
 
-		local nuget_config_file = utils.get_nuget_config_file()
-		local outdated_nugets = nugets.outdated_nugets(project_choice, nuget_config_file)
+		async.run(function()
+			local nuget_config_file = utils.get_nuget_config_file()
+			local outdated, err = nugets.outdated_nugets(project_choice, nuget_config_file)
+			if err then
+				vim.notify("Failed to list outdated nugets: " .. err, vim.log.levels.ERROR)
+				return
+			end
 
-		if #outdated_nugets == 0 then
-			vim.notify("No outdated nugets in project " .. project_choice, vim.log.levels.WARN)
-			return
-		end
+			if not outdated or #outdated == 0 then
+				vim.notify("No outdated nugets in project " .. project_choice, vim.log.levels.WARN)
+				return
+			end
 
-		local command_and_nugets = {
-			{
-				-- dotnet add <project> package <item>
-				argv = { "dotnet", "add", project_choice, "package" },
-				items = outdated_nugets,
-			},
-		}
-
-		dotnet_jobs.handle_nugets_in_project("Update", command_and_nugets)
-	end)
-end
-
---- Update all outdated NuGets in the solution (no picker; runs through all projects)
-function M.update_nugets_in_solution()
-	local projects = utils.get_all_projects_in_solution()
-	local all_projects_and_nugets = {}
-
-	for i, project in ipairs(projects) do
-		local nuget_config_file = utils.get_nuget_config_file()
-		local outdated_nugets = nugets.outdated_nugets(project, nuget_config_file)
-
-		vim.notify("Checking " .. i .. " out of " .. #projects .. " projects", vim.log.levels.INFO)
-
-		if #outdated_nugets == 0 then
-			vim.notify("No outdated nugets in project " .. project, vim.log.levels.WARN)
-		else
 			local command_and_nugets = {
 				{
 					-- dotnet add <project> package <item>
-					argv = { "dotnet", "add", project, "package" },
-					items = outdated_nugets,
+					argv = { "dotnet", "add", project_choice, "package" },
+					items = outdated,
 				},
 			}
-			utils.table_concat(all_projects_and_nugets, command_and_nugets)
-		end
-	end
 
-	if #all_projects_and_nugets == 0 then
-		vim.notify("No outdated nugets in solution", vim.log.levels.WARN)
+			dotnet_jobs.handle_nugets_in_project("Update", command_and_nugets)
+		end)
+	end)
+end
+
+-- Update all outdated NuGets in the solution (async, sequential)
+-- We iterate projects sequentially to avoid hammering dotnet concurrently.
+function M.update_nugets_in_solution()
+	local projects = utils.get_all_projects_in_solution()
+	if #projects == 0 then
+		vim.notify("No projects in solution", vim.log.levels.ERROR)
 		return
 	end
 
-	dotnet_jobs.handle_nugets_in_project("Update", all_projects_and_nugets)
+	async.run(function()
+		local all_projects_and_nugets = {}
+		local nuget_config_file = utils.get_nuget_config_file()
+
+		for i, project in ipairs(projects) do
+			vim.notify(("Checking %d / %d: %s"):format(i, #projects, project), vim.log.levels.INFO)
+
+			local outdated, err = nugets.outdated_nugets(project, nuget_config_file)
+			if err then
+				vim.notify(("Failed to list outdated for %s: %s"):format(project, err), vim.log.levels.ERROR)
+			elseif outdated and #outdated > 0 then
+				local command_and_nugets = {
+					{
+						-- dotnet add <project> package <item>
+						argv = { "dotnet", "add", project, "package" },
+						items = outdated,
+					},
+				}
+				utils.table_concat(all_projects_and_nugets, command_and_nugets)
+			else
+				vim.notify("No outdated nugets in project " .. project, vim.log.levels.WARN)
+			end
+		end
+
+		if #all_projects_and_nugets == 0 then
+			vim.notify("No outdated nugets in solution", vim.log.levels.WARN)
+			return
+		end
+
+		dotnet_jobs.handle_nugets_in_project("Update", all_projects_and_nugets)
+	end)
 end
 
---- Add a project reference
+-- Project references
 function M.add_project_reference()
 	local projects = utils.get_all_projects_in_solution()
 	if #projects == 0 then
@@ -192,7 +215,7 @@ function M.add_project_reference()
 	end)
 end
 
---- Remove a project reference
+-- Remove project reference from other project
 function M.remove_project_reference()
 	local projects = utils.get_all_projects_in_solution()
 	if #projects == 0 then
@@ -226,7 +249,7 @@ function M.remove_project_reference()
 	end)
 end
 
---- Add a project to the solution
+-- Add a project to the solution
 function M.add_project_to_solution()
 	local all_csproj_files = utils.get_all_projects_in_solution_folder_not_in_solution()
 	local projects_in_solution = utils.get_all_projects_in_solution()
