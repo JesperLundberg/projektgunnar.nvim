@@ -100,6 +100,11 @@ describe("main", function()
 			-- Call the function in main
 			sut.remove_nuget_from_project()
 
+			-- Give the scheduler time to trigger the event
+			vim.wait(50, function()
+				return false
+			end)
+
 			-- Assert that vim.notify was called with the expected arguments
 			assert.stub(vim_notify_stub).was_called_with("No projects in solution", vim.log.levels.ERROR)
 		end)
@@ -236,6 +241,11 @@ describe("main", function()
 			-- Call the function in main
 			sut.add_project_reference()
 
+			-- Give the scheduler time to trigger the event
+			vim.wait(50, function()
+				return false
+			end)
+
 			-- Assert that vim.notify was called with the expected arguments
 			assert.stub(vim_notify_stub).was_called_with("No projects in solution", vim.log.levels.ERROR)
 		end)
@@ -290,6 +300,11 @@ describe("main", function()
 
 			-- Call the function in main
 			sut.remove_project_reference()
+
+			-- Give the scheduler time to trigger the event
+			vim.wait(50, function()
+				return false
+			end)
 
 			-- Assert that vim.notify was called with the expected arguments
 			assert.stub(vim_notify_stub).was_called_with("No projects in solution", vim.log.levels.ERROR)
