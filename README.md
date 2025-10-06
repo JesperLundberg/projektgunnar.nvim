@@ -29,7 +29,8 @@ Using lazy package manager:
 ```lua
 "JesperLundberg/projektgunnar.nvim",
 dependencies = {
-    "nvim-telescope/telescope.nvim", -- Choose either telescope...
+    "folke/snacks.nvim" -- Choose either snacks.picker or
+    "nvim-telescope/telescope.nvim", -- telescope...
     "nvim-mini/mini.pick", -- ...or mini.pick
 },
 ```
@@ -39,7 +40,7 @@ dependencies = {
 ```lua
 -- Default config
 local defaults = {
-	prefer = { "telescope", "mini" },
+	prefer = {"snacks", "telescope", "mini" },
 }
 
 -- If you have both and want mini.pick set mini as only (or first in the list) choice

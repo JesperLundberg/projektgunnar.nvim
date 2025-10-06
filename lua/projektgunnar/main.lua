@@ -12,14 +12,16 @@ function M.add_nuget_to_project()
 	-- Ask for the NuGet package first
 	ui.input.open(function(nuget_to_add)
 		if nuget_to_add == "" then
-			vim.notify("No nuget selected", vim.log.levels.ERROR)
+			-- vim.notify("No nuget selected", vim.log.levels.ERROR)
 			return
 		end
 
 		-- Gather all projects
 		local projects = utils.get_all_projects_in_solution()
 		if #projects == 0 then
-			vim.notify("No projects in solution", vim.log.levels.ERROR)
+			vim.schedule(function()
+				vim.notify("No projects in solution", vim.log.levels.ERROR)
+			end)
 			return
 		end
 
@@ -43,11 +45,13 @@ function M.add_nuget_to_project()
 	end, { title = "Nuget to add" })
 end
 
--- Remove a NuGet from a project (now async to fetch package list)
+-- Remove a NuGet from a project
 function M.remove_nuget_from_project()
 	local projects = utils.get_all_projects_in_solution()
 	if #projects == 0 then
-		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		vim.schedule(function()
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
+		end)
 		return
 	end
 
@@ -58,7 +62,7 @@ function M.remove_nuget_from_project()
 			return
 		end
 
-		-- Fetch NuGets in the chosen project asynchronously
+		-- Fetch NuGets in the chosen project
 		async.run(function()
 			local all_pkgs, err = nugets.all_nugets(project_choice)
 			if err then
@@ -92,11 +96,13 @@ function M.remove_nuget_from_project()
 	end)
 end
 
--- Update NuGets in a single project (async to compute outdated list)
+-- Update NuGets in a single project
 function M.update_nugets_in_project()
 	local projects = utils.get_all_projects_in_solution()
 	if #projects == 0 then
-		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		vim.schedule(function()
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
+		end)
 		return
 	end
 
@@ -133,12 +139,14 @@ function M.update_nugets_in_project()
 	end)
 end
 
--- Update all outdated NuGets in the solution (async, sequential)
+-- Update all outdated NuGets in the solution
 -- We iterate projects sequentially to avoid hammering dotnet concurrently.
 function M.update_nugets_in_solution()
 	local projects = utils.get_all_projects_in_solution()
 	if #projects == 0 then
-		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		vim.schedule(function()
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
+		end)
 		return
 	end
 
@@ -179,7 +187,9 @@ end
 function M.add_project_reference()
 	local projects = utils.get_all_projects_in_solution()
 	if #projects == 0 then
-		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		vim.schedule(function()
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
+		end)
 		return
 	end
 
@@ -219,7 +229,9 @@ end
 function M.remove_project_reference()
 	local projects = utils.get_all_projects_in_solution()
 	if #projects == 0 then
-		vim.notify("No projects in solution", vim.log.levels.ERROR)
+		vim.schedule(function()
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
+		end)
 		return
 	end
 

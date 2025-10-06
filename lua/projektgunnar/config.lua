@@ -3,7 +3,7 @@ local M = {}
 M.options = {}
 
 local defaults = {
-	prefer = { "telescope", "mini" },
+	prefer = { "snacks", "telescope", "mini" },
 }
 
 M.options = vim.deepcopy(defaults)
