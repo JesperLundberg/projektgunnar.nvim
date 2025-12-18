@@ -1,13 +1,43 @@
 local M = {}
 
+--- Find file(s)
+---@param dir string where to search from (usually cwd)
+---@param pattern string which file to find
+---@param limit number|nil) how many files to return
+---@return table
+local function find_files_under(dir, pattern, limit)
+	limit = limit or math.huge
+
+	local expr = dir .. "/**/" .. pattern
+	local matches = vim.fn.glob(expr, false, true) -- return list
+
+	if #matches <= limit then
+		return matches
+	end
+
+	-- Return only the first 'limit' matches.
+	return vim.list_slice(matches, 1, limit)
+end
+
 --- function to require a module and return nil if it fails
 --- @param module string the module to require (safely)
 function M.prequire(module)
-	local ok, err = pcall(require, module)
+	local ok, mod = pcall(require, module)
 	if not ok then
-		return nil, err
+		return nil, mod
 	end
-	return err
+	return mod
+end
+
+--- get all solution files below cwd
+--- @return table
+function M.get_all_solution_files()
+	local cwd = vim.fn.getcwd()
+
+	-- get all solution files
+	local files = find_files_under(cwd, "*.sln")
+
+	return files
 end
 
 --- get the nuget.config file for the solution
@@ -16,11 +46,10 @@ function M.get_nuget_config_file()
 	-- get the current working directory
 	local cwd = vim.fn.getcwd()
 
-	-- find the nuget.config file in the current directory or any parent directory
-	local config_file = vim.fn.findfile("nuget.config", cwd .. ";")
+	local file = find_files_under(cwd, "nuget.config", 1)
 
 	-- return the config file path
-	return config_file
+	return file[1] -- return the first element of the table
 end
 
 --- get all the references that provided project has
@@ -28,32 +57,32 @@ end
 --- @return table
 function M.get_project_references(project)
 	-- get all references
-	local output = vim.fn.systemlist("dotnet list " .. project .. " reference")
+	local output = vim.fn.systemlist({ "dotnet", "list", project, "reference" })
 
 	-- remove the first two characters of each line as that is dotdot and change all backslashes to forward slashes
 	for i, v in ipairs(output) do
-		output[i] = string.sub(v, 3).gsub(v, "\\", "/")
+		output[i] = string.sub(v, 3):gsub("\\", "/")
 	end
 
 	-- remove the first two lines from the output as they are Projects and ----------
 	return vim.list_slice(output, 3, #output)
 end
 
--- Function to get all projects in the solution
--- @return table
+--- Function to get all projects in the solution
+--- @return table
 function M.get_all_projects_in_solution()
 	-- run the dotnet command from the root of the project using solution file got get all available projects
-	local output = vim.fn.systemlist("dotnet sln list")
+	local output = vim.fn.systemlist({ "dotnet", "sln", "list" })
 
 	-- remove the first two lines from the output as they are Projects and ----------
 	return vim.list_slice(output, 3, #output)
 end
 
--- returns all projects that are not already in the solution file
--- @return table
+--- returns all projects that are not already in the solution file
+--- @return table
 function M.get_all_projects_in_solution_folder_not_in_solution()
 	-- find all csproj files in the solution folders
-	local output = vim.fn.systemlist("find . -name '*.csproj'")
+	local output = vim.fn.systemlist({ "find", ".", "-name", "*.csproj" })
 
 	-- remove the first two characters of each line as that is a dot and a slash
 	for i, v in ipairs(output) do
