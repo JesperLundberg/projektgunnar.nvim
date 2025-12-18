@@ -68,11 +68,11 @@ function M.get_project_references(project)
 	return vim.list_slice(output, 3, #output)
 end
 
---- Function to get all projects in the solution
+--- Function to get all projects in a specific solution
+--- @param sln_path string
 --- @return table
-function M.get_all_projects_in_solution()
-	-- run the dotnet command from the root of the project using solution file got get all available projects
-	local output = vim.fn.systemlist({ "dotnet", "sln", "list" })
+function M.get_all_projects_in_solution(sln_path)
+	local output = vim.fn.systemlist({ "dotnet", "sln", sln_path, "list" })
 
 	-- remove the first two lines from the output as they are Projects and ----------
 	return vim.list_slice(output, 3, #output)
@@ -80,7 +80,7 @@ end
 
 --- returns all projects that are not already in the solution file
 --- @return table
-function M.get_all_projects_in_solution_folder_not_in_solution()
+function M.get_all_project_files()
 	-- find all csproj files in the solution folders
 	local output = vim.fn.systemlist({ "find", ".", "-name", "*.csproj" })
 

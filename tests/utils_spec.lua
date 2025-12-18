@@ -97,7 +97,7 @@ describe("utils", function()
 				"./folder2/test/not_in_sln_project3.csproj",
 			})
 
-			local result = utils.get_all_projects_in_solution_folder_not_in_solution()
+			local result = utils.get_all_project_files()
 			assert.are.same(result, {
 				"not_in_sln_project1.csproj",
 				"folder/not_in_sln_project2.csproj",
