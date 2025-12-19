@@ -69,6 +69,7 @@ end
 
 --- Forget cached solution file for current cwd.
 function M.forget_cached_solution_file()
+	vim.notify("Forgot cached solution file for current directory: " .. table_key(), vim.log.levels.INFO)
 	cache[table_key()] = nil
 end
 
