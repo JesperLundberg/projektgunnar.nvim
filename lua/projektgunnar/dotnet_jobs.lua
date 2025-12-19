@@ -106,10 +106,6 @@ end
 --- @param sln_path string path to the solution file
 --- @param project_to_add_path string path to the project to add
 function M.add_project_to_solution(sln_path, project_to_add_path)
-	local command_and_items = {
-		{ argv = { "dotnet", "sln", sln_path, "add" }, items = { project_to_add_path } },
-	}
-
 	local buf = ui.result.open()
 
 	async.ui(ui.result.print, buf, "Adding project " .. project_to_add_path .. " to solution")
