@@ -4,7 +4,8 @@ Gunnar is the nice old Swedish man who helps you add projects or packages to dot
 
 #### Demo
 
-> [!note] The demo is slightly outdated.
+> [!note]
+> The demo is slightly outdated and does not show solution auto-discovery or caching.
 
 ![Demo](https://github.com/JesperLundberg/projektgunnar.nvim/assets/4082519/827ac4be-9e47-42bd-a015-88e08d3a1f4a)
 
@@ -40,7 +41,7 @@ dependencies = {
 ```lua
 -- Default config
 local defaults = {
-	prefer = {"snacks", "telescope", "mini" },
+	prefer = { "snacks", "telescope", "mini" },
 }
 
 -- If you have both and want mini.pick set mini as only (or first in the list) choice
@@ -49,6 +50,19 @@ local defaults = {
 	prefer = { "mini" },
 }
 ```
+
+#### Solution file resolution
+
+ProjektGunnar no longer assumes that the `.sln` file is located in the current working directory.
+
+When you run a command that operates on a solution:
+
+- If a `.sln` file exists in the current working directory **or any subdirectory**, it will be used automatically.
+- If **multiple** `.sln` files are found under the current working directory, you will be prompted to choose one.
+- Your choice is **cached per working directory**, so you are only asked once.
+- Restarting Neovim clears the cache.
+
+If you want to change the selected solution without restarting Neovim, see the command below.
 
 #### Available commands
 
@@ -61,17 +75,16 @@ Example (to add nuget to project):
 :ProjektGunnar AddNugetToProject
 ```
 
-| Command                  | Description                                      |
-| ------------------------ | ------------------------------------------------ |
-| AddNugetToProject        | Add a nuget package to a project                 |
-| RemoveNugetFromProject   | Remove a nuget package from a project            |
-| UpdateNugetsInProject    | Update all nuget packages in the chosen project  |
-| UpdateNugetsInSolution   | Update all nuget packages in the chosen solution |
-| AddProjectToProject      | Add a project as reference in another            |
-| RemoveProjectFromProject | Remove a project as reference in another         |
-| AddProjectToSolution     | Add a project to the solution file               |
-
-#### TODO
+| Command                  | Description                                                   |
+| ------------------------ | ------------------------------------------------------------- |
+| AddNugetToProject        | Add a nuget package to a project                              |
+| RemoveNugetFromProject   | Remove a nuget package from a project                         |
+| UpdateNugetsInProject    | Update all nuget packages in the chosen project               |
+| UpdateNugetsInSolution   | Update all nuget packages in the chosen solution              |
+| AddProjectToProject      | Add a project as reference in another                         |
+| RemoveProjectFromProject | Remove a project as reference in another                      |
+| AddProjectToSolution     | Add a project to the solution file                            |
+| ForgetCachedSolutionFile | Forget the cached solution choice for the current working dir |
 
 #### Local development
 

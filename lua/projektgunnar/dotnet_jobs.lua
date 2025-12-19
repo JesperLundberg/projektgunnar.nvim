@@ -1,53 +1,8 @@
 local ui = require("projektgunnar.ui")
 local async = require("projektgunnar.async")
-local uv = vim.loop
 
 local api = vim.api
 local M = {}
-
--- Keep one timer per result buffer so multiple runs don't conflict
-local SpinTimers = {}
-
--- Start a spinner that ticks every 80ms for the given buffer
-local function start_spinner(buf)
-	-- Stop any existing spinner for this buffer
-	if SpinTimers[buf] then
-		SpinTimers[buf]:stop()
-		SpinTimers[buf]:close()
-		SpinTimers[buf] = nil
-	end
-
-	local t = uv.new_timer()
-	SpinTimers[buf] = t
-
-	t:start(0, 80, function()
-		vim.schedule(function()
-			if api.nvim_buf_is_valid(buf) then
-				ui.result.spinner(buf)
-			else
-				-- Buffer disappeared; stop ticking
-				if SpinTimers[buf] then
-					SpinTimers[buf]:stop()
-					SpinTimers[buf]:close()
-					SpinTimers[buf] = nil
-				end
-			end
-		end)
-	end)
-end
-
--- Stop spinner; if clear == true, remove spinner line(s) from the buffer
-local function stop_spinner(buf, clear)
-	local t = SpinTimers[buf]
-	if t then
-		t:stop()
-		t:close()
-		SpinTimers[buf] = nil
-	end
-	if clear and api.nvim_buf_is_valid(buf) then
-		ui.result.clear_spinner(buf)
-	end
-end
 
 -- Run a queue of commands sequentially as a linear async flow.
 -- Each entry shape:
@@ -73,13 +28,13 @@ local function run_queue(buf, command_and_items)
 				table.insert(argv, item)
 
 				-- Start spinner before the long-running command
-				start_spinner(buf)
+				ui.result.spinner(buf)
 
 				-- Execute the command and await completion
 				local _, _, code = async.system(argv, { text = true })
 
 				-- Stop spinner and clear spinner line
-				stop_spinner(buf, true)
+				ui.result.clear_spinner(buf)
 
 				-- Update per-item status in the floating window
 				local success = (code == 0)
@@ -108,7 +63,7 @@ function M.handle_nugets_in_project(action, command_and_nugets)
 		buffer = buf,
 		once = true,
 		callback = function()
-			stop_spinner(buf, false)
+			ui.result.clear_spinner(buf)
 		end,
 	})
 
@@ -136,7 +91,7 @@ function M.handle_project_reference(action, project_path, project_reference_path
 		buffer = buf,
 		once = true,
 		callback = function()
-			stop_spinner(buf, false)
+			ui.result.clear_spinner(buf)
 		end,
 	})
 
@@ -148,8 +103,9 @@ function M.handle_project_reference(action, project_path, project_reference_path
 end
 
 --- Add a project to the current solution
---- @param project_to_add_path string
-function M.add_project_to_solution(project_to_add_path)
+--- @param sln_path string path to the solution file
+--- @param project_to_add_path string path to the project to add
+function M.add_project_to_solution(sln_path, project_to_add_path)
 	local buf = ui.result.open()
 
 	async.ui(ui.result.print, buf, "Adding project " .. project_to_add_path .. " to solution")
@@ -158,12 +114,12 @@ function M.add_project_to_solution(project_to_add_path)
 		buffer = buf,
 		once = true,
 		callback = function()
-			stop_spinner(buf, false)
+			ui.result.clear_spinner(buf)
 		end,
 	})
 
 	local command_and_project = {
-		{ argv = { "dotnet", "sln", "add" }, items = { project_to_add_path } },
+		{ argv = { "dotnet", "sln", sln_path, "add" }, items = { project_to_add_path } },
 	}
 
 	run_queue(buf, command_and_project)
