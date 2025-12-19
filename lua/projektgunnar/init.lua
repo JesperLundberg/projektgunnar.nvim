@@ -23,6 +23,9 @@ local commands = {
 	["AddProjectToSolution"] = function()
 		require("projektgunnar.main").add_project_to_solution()
 	end,
+	["ForgetCachedSolutionFile"] = function()
+		require("projektgunnar.solution").forget_cached_solution_file()
+	end,
 }
 
 local function tab_completion(_, _, _)

@@ -68,7 +68,7 @@ function M.resolve(cb)
 end
 
 --- Forget cached solution file for current cwd.
-function M.forget()
+function M.forget_cached_solution_file()
 	cache[table_key()] = nil
 end
 
