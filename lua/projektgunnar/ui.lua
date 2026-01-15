@@ -5,10 +5,6 @@ local M = {
 	result = {},
 }
 
--- ======================
--- Utils: sizing/centering
--- ======================
-
 -- Return drawable editor size (accounts for cmdheight/tabline properly)
 local function editor_size()
 	local ui = api.nvim_list_uis()[1]
@@ -45,10 +41,6 @@ local function center_line(s)
 	return string.rep(" ", pad) .. s
 end
 
--- ======================
--- Utils: safe buffer edits
--- ======================
-
 --- Temporarily set modifiable, run fn, then restore original state
 local function with_modifiable(buf, fn)
 	local prev = vim.bo[buf].modifiable
@@ -74,10 +66,6 @@ local function append_lines(buf, lines)
 		api.nvim_buf_set_lines(buf, 0, -1, false, vim.list_extend(curr, lines))
 	end)
 end
-
--- ======================
--- Floats: single-window with built-in border/title
--- ======================
 
 --- Open a floating window with built-in border/title (no separate border buffer)
 --- @param opts table nvim_open_win config overrides (width/height/row/col required)
@@ -149,10 +137,6 @@ local function recenter_on_resize(win, width, height)
 		end,
 	})
 end
-
--- ======================
--- Spinner: dedicated line, timer-based, idempotent cleanup
--- ======================
 
 -- Active spinner state (only present while running)
 --   spinners[buf] = { timer = uv_timer, idx = int, line = int }
@@ -261,10 +245,6 @@ local function spinner_stop(buf)
 	safe_close_timer(s.timer)
 	spinners[buf] = nil
 end
-
--- ======================
--- Public API: Input popup
--- ======================
 
 --- Open a centered one-line input popup (title in border; buffer is editable)
 --- @param on_confirm fun(text: string)
@@ -417,12 +397,14 @@ end
 --- @param total integer
 --- @param success boolean
 --- @param cmd string
-function M.result.update(buf, index, total, success, cmd)
+--- @param package string
+function M.result.update(buf, index, total, success, cmd, package)
 	local status_symbol = success and "" or ""
 	local status_message = success and "Success" or "Failed"
 	append_lines(buf, {
 		tostring(index) .. " out of " .. tostring(total),
 		"Status: " .. status_message .. " " .. status_symbol,
+		"Package: " .. package,
 		"Command: " .. cmd,
 		"----------------------------------------",
 	})

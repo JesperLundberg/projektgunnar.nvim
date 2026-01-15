@@ -38,8 +38,9 @@ local function run_queue(buf, command_and_items)
 
 				-- Update per-item status in the floating window
 				local success = (code == 0)
+				local package = argv[#argv]
 				local argsToPrint = table.concat(argv or {}, " ")
-				async.ui(ui.result.update, buf, ii, total_items, success, argsToPrint)
+				async.ui(ui.result.update, buf, ii, total_items, success, argsToPrint, package)
 			end
 		end
 
