@@ -74,6 +74,7 @@ end
 function M.get_all_projects_in_solution(sln_path)
 	local output = vim.fn.systemlist({ "dotnet", "sln", sln_path, "list" })
 
+	-- Remove the first 2 rows as those are Projects and ----------
 	local rows = vim.list_slice(output, 3, #output)
 
 	local sln_dir = vim.fs.dirname(sln_path)
