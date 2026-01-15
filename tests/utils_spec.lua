@@ -203,7 +203,7 @@ describe("utils", function()
 			local sln = "/repo/MySolution.sln"
 			local result = utils.get_all_projects_in_solution(sln)
 
-			assert.are.same({ "proj1.csproj", "proj2.csproj" }, result)
+			assert.are.same({ "/repo/proj1.csproj", "/repo/proj2.csproj" }, result)
 			assert.stub(systemlist_stub).was_called_with({ "dotnet", "sln", sln, "list" })
 		end)
 
