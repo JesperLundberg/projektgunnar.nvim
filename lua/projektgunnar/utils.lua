@@ -74,8 +74,20 @@ end
 function M.get_all_projects_in_solution(sln_path)
 	local output = vim.fn.systemlist({ "dotnet", "sln", sln_path, "list" })
 
-	-- remove the first two lines from the output as they are Projects and ----------
-	return vim.list_slice(output, 3, #output)
+	local rows = vim.list_slice(output, 3, #output)
+
+	local sln_dir = vim.fs.dirname(sln_path)
+
+	local result = {}
+	for _, p in ipairs(rows) do
+		local rel = vim.trim(p):gsub("\r", "")
+		if rel ~= "" then
+			local abs = vim.fs.normalize(vim.fs.joinpath(sln_dir, rel))
+			table.insert(result, abs)
+		end
+	end
+
+	return result
 end
 
 --- returns all projects that are not already in the solution file

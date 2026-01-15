@@ -84,10 +84,6 @@ end
 -- Your async.wrap_cb appends resume as the LAST arg; we MUST pass opts explicitly.
 local run_dotnet_list_direct = async.wrap_cb(run_dotnet_list)
 
-----------------------------------------------------------------------
--- Public API
-----------------------------------------------------------------------
-
 --- List all NuGet packages in a project.
 --- @param project string
 --- @param opts { cwd?: string, text?: boolean }|nil
