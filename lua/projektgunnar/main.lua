@@ -18,7 +18,6 @@ function M.add_nuget_to_project()
 		-- Ask for the NuGet package first
 		ui.input.open(function(nuget_to_add)
 			if nuget_to_add == "" then
-				-- vim.notify("No nuget selected", vim.log.levels.ERROR)
 				return
 			end
 
@@ -31,17 +30,31 @@ function M.add_nuget_to_project()
 				return
 			end
 
-			-- Ask which project to add to
-			picker.ask_user_for_choice("Add to", projects, function(choice)
+			local display_items = {}
+			local by_display = {}
+
+			for _, proj in ipairs(projects) do
+				-- Use the same function you already use in solution.lua
+				local display = utils.relative_to_cwd(proj)
+
+				-- Build parallel arrays: display name → full path mapping
+				display_items[#display_items + 1] = display
+				by_display[display] = proj
+			end
+
+			-- Ask which project to add to (now with nice relative paths!)
+			picker.ask_user_for_choice("Add NuGet package to", display_items, function(choice)
 				if not choice then
 					vim.notify("No project chosen", vim.log.levels.ERROR)
 					return
 				end
 
+				-- Retrieve the full path for the operation
+				local project_path = by_display[choice]
+
 				local command_and_nuget_to_add = {
 					{
-						-- dotnet add <project> package <item>
-						argv = { "dotnet", "add", choice, "package" },
+						argv = { "dotnet", "add", project_path, "package" },
 						items = { nuget_to_add },
 					},
 				}

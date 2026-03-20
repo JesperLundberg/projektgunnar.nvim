@@ -5,15 +5,6 @@ local M = {}
 
 local cache = {}
 
-local function relative_to_cwd(path)
-	local cwd = vim.fn.getcwd()
-	-- Ensure cwd ends with path separator
-	if not cwd:match("/$") then
-		cwd = cwd .. "/"
-	end
-	return path:gsub("^" .. vim.pesc(cwd), "")
-end
-
 local function table_key()
 	return vim.uv.fs_realpath(vim.fn.getcwd()) or vim.fn.getcwd()
 end
@@ -50,7 +41,7 @@ function M.resolve(cb)
 	local by_display = {}
 
 	for _, sln in ipairs(solution_files) do
-		local display = relative_to_cwd(sln)
+		local display = utils.relative_to_cwd(sln)
 		display_items[#display_items + 1] = display
 		by_display[display] = sln
 	end

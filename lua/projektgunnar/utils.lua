@@ -135,4 +135,16 @@ function M.table_concat(t1, t2)
 	return t1
 end
 
+--- function to strip the cwd from the path inserted
+--- @param path string the absolute path
+--- @return string|string, number
+function M.relative_to_cwd(path)
+	local cwd = vim.fn.getcwd()
+	-- Ensure cwd ends with path separator
+	if not cwd:match("/$") then
+		cwd = cwd .. "/"
+	end
+	return path:gsub("^" .. vim.pesc(cwd), "")
+end
+
 return M
