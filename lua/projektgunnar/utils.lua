@@ -2,15 +2,25 @@ local M = {}
 
 --- Find file(s)
 ---@param dir string where to search from (usually cwd)
----@param pattern string which file to find
+---@param patterns table which files to find
 ---@param limit number|nil) how many files to return
 ---@return table
-local function find_files_under(dir, pattern, limit)
+local function find_files_under(dir, patterns, limit)
 	limit = limit or math.huge
 
-	local expr = dir .. "/**/" .. pattern
-	local matches = vim.fn.glob(expr, false, true) -- return list
+	local matches = {}
 
+	for _, pattern in ipairs(patterns) do
+		local expr = dir .. "/**/" .. pattern
+		local files_found = vim.fn.glob(expr, false, true)
+
+		for _, file in ipairs(files_found) do
+			-- only add unique
+			if not M.has_value(matches) then
+				table.insert(matches, file)
+			end
+		end
+	end
 	if #matches <= limit then
 		return matches
 	end
@@ -35,7 +45,7 @@ function M.get_all_solution_files()
 	local cwd = vim.fn.getcwd()
 
 	-- get all solution files
-	local files = find_files_under(cwd, "*.sln")
+	local files = find_files_under(cwd, { "*.sln", "*.slnx" })
 
 	return files
 end
@@ -46,7 +56,7 @@ function M.get_nuget_config_file()
 	-- get the current working directory
 	local cwd = vim.fn.getcwd()
 
-	local file = find_files_under(cwd, "nuget.config", 1)
+	local file = find_files_under(cwd, { "nuget.config" }, 1)
 
 	-- return the config file path
 	return file[1] -- return the first element of the table
