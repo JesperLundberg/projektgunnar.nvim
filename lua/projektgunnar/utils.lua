@@ -2,22 +2,22 @@ local M = {}
 
 --- Find file(s)
 ---@param dir string where to search from (usually cwd)
----@param pattern table which files to find
+---@param patterns table which files to find
 ---@param limit number|nil) how many files to return
 ---@return table
-local function find_files_under(dir, pattern, limit)
+local function find_files_under(dir, patterns, limit)
 	limit = limit or math.huge
 
 	local matches = {}
 
-	for _, value in ipairs(pattern) do
-		local expr = dir .. "/**/" .. value
+	for _, pattern in ipairs(patterns) do
+		local expr = dir .. "/**/" .. pattern
 		local files_found = vim.fn.glob(expr, false, true)
 
-		for _, value in ipairs(files_found) do
+		for _, file in ipairs(files_found) do
 			-- only add unique
 			if not M.has_value(matches) then
-				table.insert(matches, value)
+				table.insert(matches, file)
 			end
 		end
 	end
