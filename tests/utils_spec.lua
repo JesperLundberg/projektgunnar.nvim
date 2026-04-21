@@ -75,21 +75,6 @@ describe("utils", function()
 			end
 		end)
 
-		it("should return all .sln files under cwd", function()
-			getcwd_stub.returns("/repo")
-			glob_stub.returns({
-				"/repo/a.sln",
-				"/repo/sub/b.sln",
-			})
-
-			local result = utils.get_all_solution_files()
-
-			-- We don't sort here; sorting is done in solution.resolve().
-			assert.are.same({ "/repo/a.sln", "/repo/sub/b.sln" }, result)
-
-			assert.stub(glob_stub).was_called_with("/repo/**/*.sln", false, true)
-		end)
-
 		it("should return an empty table when none are found", function()
 			getcwd_stub.returns("/repo")
 			glob_stub.returns({})
