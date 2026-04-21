@@ -59,7 +59,7 @@ describe("solution", function()
 	end)
 
 	describe("resolve", function()
-		it("should call cb(nil) when no .sln exists under cwd", function()
+		it("should call cb(nil) when no .sln or .slnx exists under cwd", function()
 			utils_get_all_solution_files_stub.returns({})
 
 			local solution_file = ""
@@ -70,12 +70,12 @@ describe("solution", function()
 			assert.is_nil(solution_file)
 		end)
 
-		it("should notify error when no .sln exists under cwd", function()
+		it("should notify error when no .sln or .slnx exists under cwd", function()
 			utils_get_all_solution_files_stub.returns({})
 
 			solution.resolve(function(_) end)
 
-			assert.stub(notify_stub).was_called_with("No .sln found under cwd", vim.log.levels.ERROR)
+			assert.stub(notify_stub).was_called_with("No .sln or .slnx found under cwd", vim.log.levels.ERROR)
 		end)
 
 		it("should auto-select the only solution when exactly one exists", function()
@@ -109,7 +109,7 @@ describe("solution", function()
 		it("should call picker when multiple solutions exist", function()
 			utils_get_all_solution_files_stub.returns({
 				"/repo/a.sln",
-				"/repo/sub/b.sln",
+				"/repo/sub/b.slnx",
 			})
 
 			picker_ask_user_for_choice_stub.invokes(function(_, _, cb)

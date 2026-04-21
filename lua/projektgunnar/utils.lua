@@ -12,10 +12,15 @@ local function find_files_under(dir, pattern, limit)
 
 	for _, value in ipairs(pattern) do
 		local expr = dir .. "/**/" .. value
+		local files_found = vim.fn.glob(expr, false, true)
 
-		M.table_concat(matches, vim.fn.glob(expr, false, true))
+		for _, value in ipairs(files_found) do
+			-- only add unique
+			if not M.has_value(matches) then
+				table.insert(matches, value)
+			end
+		end
 	end
-
 	if #matches <= limit then
 		return matches
 	end
