@@ -26,7 +26,7 @@ function M.resolve(cb)
 	table.sort(solution_files)
 
 	if #solution_files == 0 then
-		vim.notify("No .sln found under cwd", vim.log.levels.ERROR)
+		vim.notify("No .sln or slnx found under cwd", vim.log.levels.ERROR)
 		cb(nil)
 		return
 	end
