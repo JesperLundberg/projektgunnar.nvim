@@ -137,16 +137,29 @@ function M.update_nugets_in_project()
 			return
 		end
 
+		-- Create a list of relative paths for display and a mapping back to absolute paths
+		local display_items = {}
+		local by_display = {}
+
+		for _, project in ipairs(projects) do
+			local display = utils.relative_to_cwd(project)
+			display_items[#display_items + 1] = display
+			by_display[display] = project
+		end
+
 		-- Pick project to update
-		picker.ask_user_for_choice("Update project", projects, function(project_choice)
+		picker.ask_user_for_choice("Update project", display_items, function(project_choice)
 			if not project_choice then
 				vim.notify("No project chosen", vim.log.levels.ERROR)
 				return
 			end
 
+			-- Use the absolute path from the mapping
+			local project_path = by_display[project_choice]
+
 			async.run(function()
 				local nuget_config_file = utils.get_nuget_config_file()
-				local outdated, err = nugets.outdated_nugets(project_choice, nuget_config_file)
+				local outdated, err = nugets.outdated_nugets(project_path, nuget_config_file)
 				if err then
 					vim.notify("Failed to list outdated nugets: " .. err, vim.log.levels.ERROR)
 					return
@@ -159,8 +172,7 @@ function M.update_nugets_in_project()
 
 				local command_and_nugets = {
 					{
-						-- dotnet add <project> package <item>
-						argv = { "dotnet", "add", project_choice, "package" },
+						argv = { "dotnet", "add", project_path, "package" },
 						items = outdated,
 					},
 				}
@@ -170,7 +182,6 @@ function M.update_nugets_in_project()
 		end)
 	end)
 end
-
 -- Update all outdated NuGets in the solution
 -- We iterate projects sequentially to avoid hammering dotnet concurrently.
 function M.update_nugets_in_solution()
