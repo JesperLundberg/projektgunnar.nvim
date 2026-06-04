@@ -182,6 +182,7 @@ function M.update_nugets_in_project()
 		end)
 	end)
 end
+
 -- Update all outdated NuGets in the solution
 -- We iterate projects sequentially to avoid hammering dotnet concurrently.
 function M.update_nugets_in_solution()
