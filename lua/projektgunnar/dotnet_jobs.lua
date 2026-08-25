@@ -52,7 +52,7 @@ end
 --- Add or update nugets in a project/solution
 --- @param action string -- e.g. "Adding"/"Updating" (used only for the message)
 --- @param command_and_nugets table -- entries with { argv = {...}, items = {...} }
-function M.handle_nugets_in_project(action, command_and_nugets)
+function M.run_dotnet_commands(action, command_and_nugets)
 	local buf = ui.result.open()
 	local scope = (#command_and_nugets == 1) and " project" or " solution"
 

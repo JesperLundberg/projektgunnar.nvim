@@ -59,7 +59,7 @@ function M.add_nuget_to_project()
 					},
 				}
 
-				dotnet_jobs.handle_nugets_in_project("Add", command_and_nuget_to_add)
+				dotnet_jobs.run_dotnet_commands("Add", command_and_nuget_to_add)
 			end)
 		end, { title = "Nuget to add" })
 	end)
@@ -115,7 +115,7 @@ function M.remove_nuget_from_project()
 						},
 					}
 
-					dotnet_jobs.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
+					dotnet_jobs.run_dotnet_commands("Remove", command_and_nuget_to_remove)
 				end)
 			end)
 		end)
@@ -177,7 +177,7 @@ function M.update_nugets_in_project()
 					},
 				}
 
-				dotnet_jobs.handle_nugets_in_project("Update", command_and_nugets)
+				dotnet_jobs.run_dotnet_commands("Update", command_and_nugets)
 			end)
 		end)
 	end)
@@ -217,7 +217,7 @@ function M.update_nugets_in_solution()
 							items = outdated,
 						},
 					}
-					utils.table_concat(all_projects_and_nugets, command_and_nugets)
+					vim.list_extend(all_projects_and_nugets, command_and_nugets)
 				else
 					vim.notify("No outdated nugets in project " .. project, vim.log.levels.WARN)
 				end
@@ -228,7 +228,7 @@ function M.update_nugets_in_solution()
 				return
 			end
 
-			dotnet_jobs.handle_nugets_in_project("Update", all_projects_and_nugets)
+			dotnet_jobs.run_dotnet_commands("Update", all_projects_and_nugets)
 		end)
 	end)
 end

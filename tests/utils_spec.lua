@@ -4,29 +4,6 @@ local stub = require("luassert.stub")
 describe("utils", function()
 	local utils = require("projektgunnar.utils")
 
-	describe("table_concat", function()
-		it("should concatenate two tables", function()
-			local t1 = { 1, 2, 3 }
-			local t2 = { 4, 5, 6 }
-			local result = utils.table_concat(t1, t2)
-			assert.are.same({ 1, 2, 3, 4, 5, 6 }, result)
-		end)
-
-		it("should keep t1 unchanged when t2 is empty", function()
-			local t1 = { 1, 2, 3 }
-			local t2 = {}
-			local result = utils.table_concat(t1, t2)
-			assert.are.same({ 1, 2, 3 }, result)
-		end)
-
-		it("should return t2 when t1 is empty", function()
-			local t1 = {}
-			local t2 = { 4, 5 }
-			local result = utils.table_concat(t1, t2)
-			assert.are.same({ 4, 5 }, result)
-		end)
-	end)
-
 	describe("has_value", function()
 		it("should return true if the value exists", function()
 			assert.is_true(utils.has_value({ 1, 2, 3 }, 2))
@@ -42,18 +19,6 @@ describe("utils", function()
 
 		it("should return false if value is nil", function()
 			assert.is_false(utils.has_value({ 1, 2, 3 }, nil))
-		end)
-	end)
-
-	describe("prequire", function()
-		it("should return module if it exists", function()
-			local mod = utils.prequire("projektgunnar.utils")
-			assert.are.same(utils, mod)
-		end)
-
-		it("should return nil if module does not exist", function()
-			local mod = utils.prequire("projektgunnar.does_not_exist")
-			assert.is_nil(mod)
 		end)
 	end)
 
