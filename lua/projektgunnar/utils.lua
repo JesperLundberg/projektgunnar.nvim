@@ -16,7 +16,7 @@ local function find_files_under(dir, patterns, limit)
 
 		for _, file in ipairs(files_found) do
 			-- only add unique
-			if not M.has_value(matches) then
+			if not M.has_value(matches, file) then
 				table.insert(matches, file)
 			end
 		end
@@ -27,16 +27,6 @@ local function find_files_under(dir, patterns, limit)
 
 	-- Return only the first 'limit' matches.
 	return vim.list_slice(matches, 1, limit)
-end
-
---- function to require a module and return nil if it fails
---- @param module string the module to require (safely)
-function M.prequire(module)
-	local ok, mod = pcall(require, module)
-	if not ok then
-		return nil, mod
-	end
-	return mod
 end
 
 --- get all solution files below cwd
@@ -131,18 +121,6 @@ function M.has_value(tab, val)
 	end
 
 	return false
-end
-
---- function to concatenate two tables (destructive on t1)
---- @param t1 table the table to concatenate to
---- @param t2 table the table to add to t1
---- @return table
-function M.table_concat(t1, t2)
-	for i = 1, #t2 do
-		t1[#t1 + 1] = t2[i]
-	end
-
-	return t1
 end
 
 --- function to strip the cwd from the path inserted

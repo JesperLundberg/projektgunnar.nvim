@@ -5,7 +5,7 @@ local M = {}
 
 local cache = {}
 
-local function table_key()
+local function cwd_key()
 	return vim.uv.fs_realpath(vim.fn.getcwd()) or vim.fn.getcwd()
 end
 
@@ -15,7 +15,7 @@ end
 --- - If many: prompts user, caches choice
 --- @param cb fun(sln_path: string|nil)
 function M.resolve(cb)
-	local key = table_key()
+	local key = cwd_key()
 
 	if cache[key] then
 		cb(cache[key])
@@ -60,8 +60,8 @@ end
 
 --- Forget cached solution file for current cwd.
 function M.forget_cached_solution_file()
-	vim.notify("Forgot cached solution file for current directory: " .. table_key(), vim.log.levels.INFO)
-	cache[table_key()] = nil
+	vim.notify("Forgot cached solution file for current directory: " .. cwd_key(), vim.log.levels.INFO)
+	cache[cwd_key()] = nil
 end
 
 return M
