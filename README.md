@@ -97,3 +97,6 @@ nvim --headless --noplugin -u tests/minimal.vim -c "PlenaryBustedDirectory tests
 #### Credits
 
 [Issafalcon](https://github.com/Issafalcon/) - for being patient with questions and giving me clues on what to look into.
+
+
+Do you like ProjektGunnar? Buy me a coffee - https://ko-fi.com/jesperlundberg
