@@ -10,8 +10,12 @@ local M = {}
 
 -- Awaitable wrappers for callback-style APIs that don't fit
 -- async.wrap_cb's "callback is the last argument" convention.
-local resolve_solution = async.wrap_cb(solution.resolve)
-local ask_choice = async.wrap_cb(picker.ask_user_for_choice)
+local resolve_solution = async.wrap_cb(function(cb)
+	solution.resolve(cb)
+end)
+local ask_choice = async.wrap_cb(function(prompt, items, cb)
+	picker.ask_user_for_choice(prompt, items, cb)
+end)
 
 -- ui.input.open(cb, opts) takes the callback first, so wrap manually.
 local function ask_input(opts)
@@ -125,7 +129,7 @@ function M.update_nugets_in_project()
 		if #projects == 0 then
 			vim.notify("No projects in solution", vim.log.levels.ERROR)
 			return
-    end
+		end
 
 		local display_items, by_display = utils.relative_to_cwd(projects)
 		assert(by_display)
@@ -265,11 +269,12 @@ function M.remove_project_reference()
 
 		local projects = utils.get_all_projects_in_solution(sln)
 		if #projects == 0 then
-vim.notify("No project references in " .. remove_from_choice, vim.log.levels.WARN)
-return
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
+			return
 		end
 
 		local display_items, by_display = utils.relative_to_cwd(projects)
+		assert(by_display)
 
 		-- Step 1: pick project to remove from
 		local remove_from_choice = ask_choice("Remove from", display_items)
@@ -281,13 +286,13 @@ return
 
 		-- Fetch references for that project
 		local project_references = utils.get_project_references(project_to_remove_from)
-		local ref_display_items, ref_by_display = utils.relative_to_cwd(project_references)
-		assert(ref_by_display)
+		if not project_references or #project_references == 0 then
 			vim.notify("No project references in " .. remove_from_choice, vim.log.levels.WARN)
 			return
 		end
 
 		local ref_display_items, ref_by_display = utils.relative_to_cwd(project_references)
+		assert(ref_by_display)
 
 		-- Step 2: pick which reference to remove
 		local reference_choice = ask_choice("Remove", ref_display_items)
@@ -319,14 +324,14 @@ function M.add_project_to_solution()
 				table.insert(projects_not_in_solution, csproj_file)
 			end
 		end
-		local display_items, by_display = utils.relative_to_cwd(projects_not_in_solution)
-		assert(by_display)
+
 		if not projects_not_in_solution or #projects_not_in_solution == 0 then
 			vim.notify("No csproj files that are not already in solution", vim.log.levels.WARN)
 			return
 		end
 
 		local display_items, by_display = utils.relative_to_cwd(projects_not_in_solution)
+		assert(by_display)
 
 		local choice = ask_choice("Add", display_items)
 		if not choice then
