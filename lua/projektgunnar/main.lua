@@ -40,6 +40,7 @@ function M.add_nuget_to_project()
 		end
 
 		local display_items, by_display = utils.relative_to_cwd(projects)
+		assert(by_display)
 
 		local choice = ask_choice("Add NuGet package to", display_items)
 		if not choice then
@@ -73,14 +74,8 @@ function M.remove_nuget_from_project()
 			vim.notify("No projects in solution", vim.log.levels.ERROR)
 			return
 		end
-
-		local display_items = {}
-		local by_display = {}
-		for _, proj in ipairs(projects) do
-			local display = utils.relative_to_cwd(proj)
-			display_items[#display_items + 1] = display
-			by_display[display] = proj
-		end
+		local display_items, by_display = utils.relative_to_cwd(projects)
+		assert(by_display)
 
 		local project_choice = ask_choice("Remove from", display_items)
 		if not project_choice then
@@ -118,6 +113,7 @@ function M.remove_nuget_from_project()
 	end)
 end
 
+-- Update nugets
 function M.update_nugets_in_project()
 	async.run(function()
 		local sln = resolve_solution()
@@ -129,17 +125,10 @@ function M.update_nugets_in_project()
 		if #projects == 0 then
 			vim.notify("No projects in solution", vim.log.levels.ERROR)
 			return
-		end
+    end
 
-		-- Create a list of relative paths for display and a mapping back to absolute paths
-		local display_items = {}
-		local by_display = {}
-
-		for _, project in ipairs(projects) do
-			local display = utils.relative_to_cwd(project)
-			display_items[#display_items + 1] = display
-			by_display[display] = project
-		end
+		local display_items, by_display = utils.relative_to_cwd(projects)
+		assert(by_display)
 
 		local project_choice = ask_choice("Update project", display_items)
 		if not project_choice then
@@ -147,7 +136,6 @@ function M.update_nugets_in_project()
 			return
 		end
 
-		-- Use the absolute path from the mapping
 		local project_path = by_display[project_choice]
 
 		local nuget_config_file = utils.get_nuget_config_file()
@@ -231,13 +219,8 @@ function M.add_project_reference()
 			return
 		end
 
-		local display_items = {}
-		local by_display = {}
-		for _, proj in ipairs(projects) do
-			local display = utils.relative_to_cwd(proj)
-			display_items[#display_items + 1] = display
-			by_display[display] = proj
-		end
+		local display_items, by_display = utils.relative_to_cwd(projects)
+		assert(by_display)
 
 		-- Step 1: pick project to add to
 		local add_to_choice = ask_choice("Add to", display_items)
@@ -282,17 +265,11 @@ function M.remove_project_reference()
 
 		local projects = utils.get_all_projects_in_solution(sln)
 		if #projects == 0 then
-			vim.notify("No projects in solution", vim.log.levels.ERROR)
-			return
+vim.notify("No project references in " .. remove_from_choice, vim.log.levels.WARN)
+return
 		end
 
-		local display_items = {}
-		local by_display = {}
-		for _, proj in ipairs(projects) do
-			local display = utils.relative_to_cwd(proj)
-			display_items[#display_items + 1] = display
-			by_display[display] = proj
-		end
+		local display_items, by_display = utils.relative_to_cwd(projects)
 
 		-- Step 1: pick project to remove from
 		local remove_from_choice = ask_choice("Remove from", display_items)
@@ -304,18 +281,13 @@ function M.remove_project_reference()
 
 		-- Fetch references for that project
 		local project_references = utils.get_project_references(project_to_remove_from)
-		if #project_references == 0 then
+		local ref_display_items, ref_by_display = utils.relative_to_cwd(project_references)
+		assert(ref_by_display)
 			vim.notify("No project references in " .. remove_from_choice, vim.log.levels.WARN)
 			return
 		end
 
-		local ref_display_items = {}
-		local ref_by_display = {}
-		for _, ref in ipairs(project_references) do
-			local display = utils.relative_to_cwd(ref)
-			ref_display_items[#ref_display_items + 1] = display
-			ref_by_display[display] = ref
-		end
+		local ref_display_items, ref_by_display = utils.relative_to_cwd(project_references)
 
 		-- Step 2: pick which reference to remove
 		local reference_choice = ask_choice("Remove", ref_display_items)
@@ -347,19 +319,14 @@ function M.add_project_to_solution()
 				table.insert(projects_not_in_solution, csproj_file)
 			end
 		end
-
+		local display_items, by_display = utils.relative_to_cwd(projects_not_in_solution)
+		assert(by_display)
 		if not projects_not_in_solution or #projects_not_in_solution == 0 then
 			vim.notify("No csproj files that are not already in solution", vim.log.levels.WARN)
 			return
 		end
 
-		local display_items = {}
-		local by_display = {}
-		for _, proj in ipairs(projects_not_in_solution) do
-			local display = utils.relative_to_cwd(proj)
-			display_items[#display_items + 1] = display
-			by_display[display] = proj
-		end
+		local display_items, by_display = utils.relative_to_cwd(projects_not_in_solution)
 
 		local choice = ask_choice("Add", display_items)
 		if not choice then

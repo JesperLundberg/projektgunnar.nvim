@@ -146,15 +146,35 @@ function M.table_concat(t1, t2)
 end
 
 --- function to strip the cwd from the path inserted
---- @param path string the absolute path
---- @return string|string, number
+--- Accepts either a single path (string) or a list of paths (table).
+--- When given a table, also returns a reverse map from display -> original path.
+--- @overload fun(path: string): string
+--- @overload fun(path: table): table, table
+--- @param path string|table the absolute path, or a list of absolute paths
+--- @return string|table, table|nil
 function M.relative_to_cwd(path)
 	local cwd = vim.fn.getcwd()
 	-- Ensure cwd ends with path separator
 	if not cwd:match("/$") then
 		cwd = cwd .. "/"
 	end
-	return path:gsub("^" .. vim.pesc(cwd), "")
+
+	local function strip(p)
+		return p:gsub("^" .. vim.pesc(cwd), "")
+	end
+
+	if type(path) == "table" then
+		local display_items = {}
+		local by_display = {}
+		for _, p in ipairs(path) do
+			local display = strip(p)
+			display_items[#display_items + 1] = display
+			by_display[display] = p
+		end
+		return display_items, by_display
+	end
+
+	return strip(path)
 end
 
 return M
