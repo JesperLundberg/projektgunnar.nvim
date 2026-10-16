@@ -39,14 +39,7 @@ function M.add_nuget_to_project()
 			return
 		end
 
-		local display_items = {}
-		local by_display = {}
-
-		for _, proj in ipairs(projects) do
-			local display = utils.relative_to_cwd(proj)
-			display_items[#display_items + 1] = display
-			by_display[display] = proj
-		end
+		local display_items, by_display = utils.relative_to_cwd(projects)
 
 		local choice = ask_choice("Add NuGet package to", display_items)
 		if not choice then
@@ -81,13 +74,23 @@ function M.remove_nuget_from_project()
 			return
 		end
 
-		local project_choice = ask_choice("Remove from", projects)
+		local display_items = {}
+		local by_display = {}
+		for _, proj in ipairs(projects) do
+			local display = utils.relative_to_cwd(proj)
+			display_items[#display_items + 1] = display
+			by_display[display] = proj
+		end
+
+		local project_choice = ask_choice("Remove from", display_items)
 		if not project_choice then
 			vim.notify("No project chosen", vim.log.levels.ERROR)
 			return
 		end
 
-		local all_pkgs, err = nugets.all_nugets(project_choice)
+		local project_path = by_display[project_choice]
+
+		local all_pkgs, err = nugets.all_nugets(project_path)
 		if err then
 			vim.notify("Failed to list packages: " .. err, vim.log.levels.ERROR)
 			return
@@ -106,8 +109,7 @@ function M.remove_nuget_from_project()
 
 		local command_and_nuget_to_remove = {
 			{
-				-- dotnet remove <project> package <item>
-				argv = { "dotnet", "remove", project_choice, "package" },
+				argv = { "dotnet", "remove", project_path, "package" },
 				items = { nuget_to_remove },
 			},
 		}
@@ -229,32 +231,42 @@ function M.add_project_reference()
 			return
 		end
 
+		local display_items = {}
+		local by_display = {}
+		for _, proj in ipairs(projects) do
+			local display = utils.relative_to_cwd(proj)
+			display_items[#display_items + 1] = display
+			by_display[display] = proj
+		end
+
 		-- Step 1: pick project to add to
-		local project_to_add_to = ask_choice("Add to", projects)
-		if not project_to_add_to then
+		local add_to_choice = ask_choice("Add to", display_items)
+		if not add_to_choice then
 			vim.notify("No project chosen", vim.log.levels.ERROR)
 			return
 		end
+		local project_to_add_to = by_display[add_to_choice]
 
 		-- Remove the chosen project from the list of candidates to reference
-		local candidates = {}
-		for _, v in ipairs(projects) do
-			if v ~= project_to_add_to then
-				table.insert(candidates, v)
+		local candidate_display_items = {}
+		for _, display in ipairs(display_items) do
+			if display ~= add_to_choice then
+				table.insert(candidate_display_items, display)
 			end
 		end
 
-		if #candidates == 0 then
+		if #candidate_display_items == 0 then
 			vim.notify("No other projects to add as reference", vim.log.levels.WARN)
 			return
 		end
 
 		-- Step 2: pick which project to reference
-		local project_to_reference = ask_choice("Add", candidates)
-		if not project_to_reference then
+		local reference_choice = ask_choice("Add", candidate_display_items)
+		if not reference_choice then
 			vim.notify("No project chosen", vim.log.levels.ERROR)
 			return
 		end
+		local project_to_reference = by_display[reference_choice]
 
 		dotnet_jobs.handle_project_reference("add", project_to_add_to, project_to_reference)
 	end)
@@ -274,28 +286,46 @@ function M.remove_project_reference()
 			return
 		end
 
+		local display_items = {}
+		local by_display = {}
+		for _, proj in ipairs(projects) do
+			local display = utils.relative_to_cwd(proj)
+			display_items[#display_items + 1] = display
+			by_display[display] = proj
+		end
+
 		-- Step 1: pick project to remove from
-		local project_to_remove_from = ask_choice("Remove from", projects)
-		if not project_to_remove_from then
+		local remove_from_choice = ask_choice("Remove from", display_items)
+		if not remove_from_choice then
 			vim.notify("No project chosen", vim.log.levels.ERROR)
 			return
 		end
+		local project_to_remove_from = by_display[remove_from_choice]
 
 		-- Fetch references for that project
 		local project_references = utils.get_project_references(project_to_remove_from)
 		if #project_references == 0 then
-			vim.notify("No project references in " .. project_to_remove_from, vim.log.levels.WARN)
+			vim.notify("No project references in " .. remove_from_choice, vim.log.levels.WARN)
 			return
 		end
 
+		local ref_display_items = {}
+		local ref_by_display = {}
+		for _, ref in ipairs(project_references) do
+			local display = utils.relative_to_cwd(ref)
+			ref_display_items[#ref_display_items + 1] = display
+			ref_by_display[display] = ref
+		end
+
 		-- Step 2: pick which reference to remove
-		local reference_choice = ask_choice("Remove", project_references)
+		local reference_choice = ask_choice("Remove", ref_display_items)
 		if not reference_choice then
 			vim.notify("No project chosen", vim.log.levels.ERROR)
 			return
 		end
+		local reference_to_remove = ref_by_display[reference_choice]
 
-		dotnet_jobs.handle_project_reference("remove", project_to_remove_from, reference_choice)
+		dotnet_jobs.handle_project_reference("remove", project_to_remove_from, reference_to_remove)
 	end)
 end
 
@@ -323,13 +353,22 @@ function M.add_project_to_solution()
 			return
 		end
 
-		local choice = ask_choice("Add", projects_not_in_solution)
+		local display_items = {}
+		local by_display = {}
+		for _, proj in ipairs(projects_not_in_solution) do
+			local display = utils.relative_to_cwd(proj)
+			display_items[#display_items + 1] = display
+			by_display[display] = proj
+		end
+
+		local choice = ask_choice("Add", display_items)
 		if not choice then
 			vim.notify("No project chosen", vim.log.levels.ERROR)
 			return
 		end
+		local project_path = by_display[choice]
 
-		dotnet_jobs.add_project_to_solution(sln, choice)
+		dotnet_jobs.add_project_to_solution(sln, project_path)
 	end)
 end
 
