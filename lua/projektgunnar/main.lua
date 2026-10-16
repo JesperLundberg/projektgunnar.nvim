@@ -8,117 +8,111 @@ local ui = require("projektgunnar.ui")
 
 local M = {}
 
+-- Awaitable wrappers for callback-style APIs that don't fit
+-- async.wrap_cb's "callback is the last argument" convention.
+local resolve_solution = async.wrap_cb(solution.resolve)
+local ask_choice = async.wrap_cb(picker.ask_user_for_choice)
+
+-- ui.input.open(cb, opts) takes the callback first, so wrap manually.
+local function ask_input(opts)
+	return coroutine.yield(function(resume)
+		ui.input.open(resume, opts)
+	end)
+end
+
 -- Add NuGet to a project
 function M.add_nuget_to_project()
-	solution.resolve(function(sln)
+	async.run(function()
+		local sln = resolve_solution()
 		if not sln then
 			return
 		end
 
-		-- Ask for the NuGet package first
-		ui.input.open(function(nuget_to_add)
-			if nuget_to_add == "" then
-				return
-			end
+		local nuget_to_add = ask_input({ title = "Nuget to add" })
+		if not nuget_to_add or nuget_to_add == "" then
+			return
+		end
 
-			-- Gather all projects
-			local projects = utils.get_all_projects_in_solution(sln)
-			if #projects == 0 then
-				vim.schedule(function()
-					vim.notify("No projects in solution", vim.log.levels.ERROR)
-				end)
-				return
-			end
+		local projects = utils.get_all_projects_in_solution(sln)
+		if #projects == 0 then
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
+			return
+		end
 
-			local display_items = {}
-			local by_display = {}
+		local display_items = {}
+		local by_display = {}
 
-			for _, proj in ipairs(projects) do
-				-- Use the same function you already use in solution.lua
-				local display = utils.relative_to_cwd(proj)
+		for _, proj in ipairs(projects) do
+			local display = utils.relative_to_cwd(proj)
+			display_items[#display_items + 1] = display
+			by_display[display] = proj
+		end
 
-				-- Build parallel arrays: display name → full path mapping
-				display_items[#display_items + 1] = display
-				by_display[display] = proj
-			end
+		local choice = ask_choice("Add NuGet package to", display_items)
+		if not choice then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
 
-			-- Ask which project to add to (now with nice relative paths!)
-			picker.ask_user_for_choice("Add NuGet package to", display_items, function(choice)
-				if not choice then
-					vim.notify("No project chosen", vim.log.levels.ERROR)
-					return
-				end
+		local project_path = by_display[choice]
 
-				-- Retrieve the full path for the operation
-				local project_path = by_display[choice]
+		local command_and_nuget_to_add = {
+			{
+				argv = { "dotnet", "add", project_path, "package" },
+				items = { nuget_to_add },
+			},
+		}
 
-				local command_and_nuget_to_add = {
-					{
-						argv = { "dotnet", "add", project_path, "package" },
-						items = { nuget_to_add },
-					},
-				}
-
-				dotnet_jobs.handle_nugets_in_project("Add", command_and_nuget_to_add)
-			end)
-		end, { title = "Nuget to add" })
+		dotnet_jobs.handle_nugets_in_project("Add", command_and_nuget_to_add)
 	end)
 end
 
 -- Remove a NuGet from a project
 function M.remove_nuget_from_project()
-	solution.resolve(function(sln)
+	async.run(function()
+		local sln = resolve_solution()
 		if not sln then
 			return
 		end
 
 		local projects = utils.get_all_projects_in_solution(sln)
 		if #projects == 0 then
-			vim.schedule(function()
-				vim.notify("No projects in solution", vim.log.levels.ERROR)
-			end)
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
 			return
 		end
 
-		-- Pick project first
-		picker.ask_user_for_choice("Remove from", projects, function(project_choice)
-			if not project_choice then
-				vim.notify("No project chosen", vim.log.levels.ERROR)
-				return
-			end
+		local project_choice = ask_choice("Remove from", projects)
+		if not project_choice then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
 
-			-- Fetch NuGets in the chosen project
-			async.run(function()
-				local all_pkgs, err = nugets.all_nugets(project_choice)
-				if err then
-					vim.notify("Failed to list packages: " .. err, vim.log.levels.ERROR)
-					return
-				end
+		local all_pkgs, err = nugets.all_nugets(project_choice)
+		if err then
+			vim.notify("Failed to list packages: " .. err, vim.log.levels.ERROR)
+			return
+		end
 
-				if not all_pkgs or #all_pkgs == 0 then
-					vim.notify("No nugets in project " .. project_choice, vim.log.levels.WARN)
-					return
-				end
+		if not all_pkgs or #all_pkgs == 0 then
+			vim.notify("No nugets in project " .. project_choice, vim.log.levels.WARN)
+			return
+		end
 
-				-- Pick which NuGet to remove
-				picker.ask_user_for_choice("Remove which", all_pkgs, function(nuget_to_remove)
-					if not nuget_to_remove then
-						vim.notify("No nuget chosen", vim.log.levels.WARN)
-						return
-					end
+		local nuget_to_remove = ask_choice("Remove which", all_pkgs)
+		if not nuget_to_remove then
+			vim.notify("No nuget chosen", vim.log.levels.WARN)
+			return
+		end
 
-					local command_and_nuget_to_remove = {
-						{
-							-- dotnet remove <project> package <item>
-							argv = { "dotnet", "remove", project_choice, "package" },
-							items = { nuget_to_remove },
-						},
-					}
+		local command_and_nuget_to_remove = {
+			{
+				-- dotnet remove <project> package <item>
+				argv = { "dotnet", "remove", project_choice, "package" },
+				items = { nuget_to_remove },
+			},
+		}
 
-					dotnet_jobs.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
-				end)
-			end)
-		end)
+		dotnet_jobs.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
 	end)
 end
 
