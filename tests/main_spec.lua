@@ -7,7 +7,6 @@ local utils = require("projektgunnar.utils")
 local picker = require("projektgunnar.picker")
 local dotnet_jobs = require("projektgunnar.dotnet_jobs")
 local nugets = require("projektgunnar.nugets")
-local async_ = require("projektgunnar.async")
 local solution = require("projektgunnar.solution")
 
 describe("main", function()
@@ -15,7 +14,6 @@ describe("main", function()
 	local vim_notify_stub
 	local vim_schedule_stub
 
-	local async_run_stub
 	local solution_resolve_stub
 
 	local utils_get_all_projects_in_solution_stub
@@ -25,7 +23,7 @@ describe("main", function()
 
 	local picker_ask_user_for_choice_stub
 
-	local dotnet_handle_nugets_in_project_stub
+	local dotnet_run_dotnet_commands_stub
 	local dotnet_handle_project_reference_stub
 	local dotnet_add_project_to_solution_stub
 
@@ -47,12 +45,6 @@ describe("main", function()
 			fn()
 		end)
 
-		-- Make async.run synchronous for all tests.
-		async_run_stub = stub(async_, "run")
-		async_run_stub.invokes(function(fn)
-			fn()
-		end)
-
 		-- Always resolve a fake solution unless a test overrides it.
 		solution_resolve_stub = stub(solution, "resolve")
 		solution_resolve_stub.invokes(function(cb)
@@ -69,7 +61,7 @@ describe("main", function()
 		-- Stub picker and dotnet jobs.
 		picker_ask_user_for_choice_stub = stub(picker, "ask_user_for_choice")
 
-		dotnet_handle_nugets_in_project_stub = stub(dotnet_jobs, "handle_nugets_in_project")
+		dotnet_run_dotnet_commands_stub = stub(dotnet_jobs, "run_dotnet_commands")
 		dotnet_handle_project_reference_stub = stub(dotnet_jobs, "handle_project_reference")
 		dotnet_add_project_to_solution_stub = stub(dotnet_jobs, "add_project_to_solution")
 
@@ -86,9 +78,6 @@ describe("main", function()
 			vim_schedule_stub:revert()
 		end
 
-		if async_run_stub then
-			async_run_stub:revert()
-		end
 		if solution_resolve_stub then
 			solution_resolve_stub:revert()
 		end
@@ -110,8 +99,8 @@ describe("main", function()
 			picker_ask_user_for_choice_stub:revert()
 		end
 
-		if dotnet_handle_nugets_in_project_stub then
-			dotnet_handle_nugets_in_project_stub:revert()
+		if dotnet_run_dotnet_commands_stub then
+			dotnet_run_dotnet_commands_stub:revert()
 		end
 		if dotnet_handle_project_reference_stub then
 			dotnet_handle_project_reference_stub:revert()
@@ -173,7 +162,7 @@ describe("main", function()
 
 			sut.remove_nuget_from_project()
 
-			assert.stub(dotnet_handle_nugets_in_project_stub).was_called_with("Remove", {
+			assert.stub(dotnet_run_dotnet_commands_stub).was_called_with("Remove", {
 				{
 					argv = { "dotnet", "remove", "proj1", "package" },
 					items = { "Moq" },
@@ -209,7 +198,7 @@ describe("main", function()
 
 			sut.update_nugets_in_project()
 
-			assert.stub(dotnet_handle_nugets_in_project_stub).was_called_with("Update", {
+			assert.stub(dotnet_run_dotnet_commands_stub).was_called_with("Update", {
 				{
 					argv = { "dotnet", "add", "proj1", "package" },
 					items = { "Moq", "NUnit" },
