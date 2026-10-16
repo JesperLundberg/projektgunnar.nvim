@@ -116,18 +116,16 @@ function M.remove_nuget_from_project()
 	end)
 end
 
--- Update NuGets in a single project
 function M.update_nugets_in_project()
-	solution.resolve(function(sln)
+	async.run(function()
+		local sln = resolve_solution()
 		if not sln then
 			return
 		end
 
 		local projects = utils.get_all_projects_in_solution(sln)
 		if #projects == 0 then
-			vim.schedule(function()
-				vim.notify("No projects in solution", vim.log.levels.ERROR)
-			end)
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
 			return
 		end
 
@@ -141,185 +139,170 @@ function M.update_nugets_in_project()
 			by_display[display] = project
 		end
 
-		-- Pick project to update
-		picker.ask_user_for_choice("Update project", display_items, function(project_choice)
-			if not project_choice then
-				vim.notify("No project chosen", vim.log.levels.ERROR)
-				return
-			end
+		local project_choice = ask_choice("Update project", display_items)
+		if not project_choice then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
 
-			-- Use the absolute path from the mapping
-			local project_path = by_display[project_choice]
+		-- Use the absolute path from the mapping
+		local project_path = by_display[project_choice]
 
-			async.run(function()
-				local nuget_config_file = utils.get_nuget_config_file()
-				local outdated, err = nugets.outdated_nugets(project_path, nuget_config_file)
-				if err then
-					vim.notify("Failed to list outdated nugets: " .. err, vim.log.levels.ERROR)
-					return
-				end
+		local nuget_config_file = utils.get_nuget_config_file()
+		local outdated, err = nugets.outdated_nugets(project_path, nuget_config_file)
+		if err then
+			vim.notify("Failed to list outdated nugets: " .. err, vim.log.levels.ERROR)
+			return
+		end
 
-				if not outdated or #outdated == 0 then
-					vim.notify("No outdated nugets in project " .. project_choice, vim.log.levels.WARN)
-					return
-				end
+		if not outdated or #outdated == 0 then
+			vim.notify("No outdated nugets in project " .. project_choice, vim.log.levels.WARN)
+			return
+		end
 
-				local command_and_nugets = {
-					{
-						argv = { "dotnet", "add", project_path, "package" },
-						items = outdated,
-					},
-				}
+		local command_and_nugets = {
+			{
+				argv = { "dotnet", "add", project_path, "package" },
+				items = outdated,
+			},
+		}
 
-				dotnet_jobs.handle_nugets_in_project("Update", command_and_nugets)
-			end)
-		end)
+		dotnet_jobs.handle_nugets_in_project("Update", command_and_nugets)
 	end)
 end
 
--- Update all outdated NuGets in the solution
--- We iterate projects sequentially to avoid hammering dotnet concurrently.
 function M.update_nugets_in_solution()
-	solution.resolve(function(sln)
+	async.run(function()
+		local sln = resolve_solution()
 		if not sln then
 			return
 		end
-		local projects = utils.get_all_projects_in_solution(sln)
 
+		local projects = utils.get_all_projects_in_solution(sln)
 		if #projects == 0 then
-			vim.schedule(function()
-				vim.notify("No projects in solution", vim.log.levels.ERROR)
-			end)
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
 			return
 		end
 
-		async.run(function()
-			local all_projects_and_nugets = {}
-			local nuget_config_file = utils.get_nuget_config_file()
+		local all_projects_and_nugets = {}
+		local nuget_config_file = utils.get_nuget_config_file()
 
-			for i, project in ipairs(projects) do
-				vim.notify(("Checking %d / %d: %s"):format(i, #projects, project), vim.log.levels.INFO)
+		for i, project in ipairs(projects) do
+			vim.notify(("Checking %d / %d: %s"):format(i, #projects, project), vim.log.levels.INFO)
 
-				local outdated, err = nugets.outdated_nugets(project, nuget_config_file)
-				if err then
-					vim.notify(("Failed to list outdated for %s: %s"):format(project, err), vim.log.levels.ERROR)
-				elseif outdated and #outdated > 0 then
-					local command_and_nugets = {
-						{
-							-- dotnet add <project> package <item>
-							argv = { "dotnet", "add", project, "package" },
-							items = outdated,
-						},
-					}
-					utils.table_concat(all_projects_and_nugets, command_and_nugets)
-				else
-					vim.notify("No outdated nugets in project " .. project, vim.log.levels.WARN)
-				end
+			local outdated, err = nugets.outdated_nugets(project, nuget_config_file)
+			if err then
+				vim.notify(("Failed to list outdated for %s: %s"):format(project, err), vim.log.levels.ERROR)
+			elseif outdated and #outdated > 0 then
+				local command_and_nugets = {
+					{
+						argv = { "dotnet", "add", project, "package" },
+						items = outdated,
+					},
+				}
+				utils.table_concat(all_projects_and_nugets, command_and_nugets)
+			else
+				vim.notify("No outdated nugets in project " .. project, vim.log.levels.WARN)
 			end
+		end
 
-			if #all_projects_and_nugets == 0 then
-				vim.notify("No outdated nugets in solution", vim.log.levels.WARN)
-				return
-			end
+		if #all_projects_and_nugets == 0 then
+			vim.notify("No outdated nugets in solution", vim.log.levels.WARN)
+			return
+		end
 
-			dotnet_jobs.handle_nugets_in_project("Update", all_projects_and_nugets)
-		end)
+		dotnet_jobs.handle_nugets_in_project("Update", all_projects_and_nugets)
 	end)
 end
 
 -- Project references
 function M.add_project_reference()
-	solution.resolve(function(sln)
+	async.run(function()
+		local sln = resolve_solution()
 		if not sln then
 			return
 		end
 
 		local projects = utils.get_all_projects_in_solution(sln)
 		if #projects == 0 then
-			vim.schedule(function()
-				vim.notify("No projects in solution", vim.log.levels.ERROR)
-			end)
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
 			return
 		end
 
 		-- Step 1: pick project to add to
-		picker.ask_user_for_choice("Add to", projects, function(project_to_add_to)
-			if not project_to_add_to then
-				vim.notify("No project chosen", vim.log.levels.ERROR)
-				return
+		local project_to_add_to = ask_choice("Add to", projects)
+		if not project_to_add_to then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
+
+		-- Remove the chosen project from the list of candidates to reference
+		local candidates = {}
+		for _, v in ipairs(projects) do
+			if v ~= project_to_add_to then
+				table.insert(candidates, v)
 			end
+		end
 
-			-- Remove the chosen project from the list of candidates to reference
-			local candidates = {}
-			for _, v in ipairs(projects) do
-				if v ~= project_to_add_to then
-					table.insert(candidates, v)
-				end
-			end
+		if #candidates == 0 then
+			vim.notify("No other projects to add as reference", vim.log.levels.WARN)
+			return
+		end
 
-			if #candidates == 0 then
-				vim.notify("No other projects to add as reference", vim.log.levels.WARN)
-				return
-			end
+		-- Step 2: pick which project to reference
+		local project_to_reference = ask_choice("Add", candidates)
+		if not project_to_reference then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
 
-			-- Step 2: pick which project to reference
-			picker.ask_user_for_choice("Add", candidates, function(project_to_reference)
-				if not project_to_reference then
-					vim.notify("No project chosen", vim.log.levels.ERROR)
-					return
-				end
-
-				dotnet_jobs.handle_project_reference("add", project_to_add_to, project_to_reference)
-			end)
-		end)
+		dotnet_jobs.handle_project_reference("add", project_to_add_to, project_to_reference)
 	end)
 end
 
 -- Remove project reference from other project
 function M.remove_project_reference()
-	solution.resolve(function(sln)
+	async.run(function()
+		local sln = resolve_solution()
 		if not sln then
 			return
 		end
 
 		local projects = utils.get_all_projects_in_solution(sln)
 		if #projects == 0 then
-			vim.schedule(function()
-				vim.notify("No projects in solution", vim.log.levels.ERROR)
-			end)
+			vim.notify("No projects in solution", vim.log.levels.ERROR)
 			return
 		end
 
 		-- Step 1: pick project to remove from
-		picker.ask_user_for_choice("Remove from", projects, function(project_to_remove_from)
-			if not project_to_remove_from then
-				vim.notify("No project chosen", vim.log.levels.ERROR)
-				return
-			end
+		local project_to_remove_from = ask_choice("Remove from", projects)
+		if not project_to_remove_from then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
 
-			-- Fetch references for that project
-			local project_references = utils.get_project_references(project_to_remove_from)
-			if #project_references == 0 then
-				vim.notify("No project references in " .. project_to_remove_from, vim.log.levels.WARN)
-				return
-			end
+		-- Fetch references for that project
+		local project_references = utils.get_project_references(project_to_remove_from)
+		if #project_references == 0 then
+			vim.notify("No project references in " .. project_to_remove_from, vim.log.levels.WARN)
+			return
+		end
 
-			-- Step 2: pick which reference to remove
-			picker.ask_user_for_choice("Remove", project_references, function(reference_choice)
-				if not reference_choice then
-					vim.notify("No project chosen", vim.log.levels.ERROR)
-					return
-				end
+		-- Step 2: pick which reference to remove
+		local reference_choice = ask_choice("Remove", project_references)
+		if not reference_choice then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
 
-				dotnet_jobs.handle_project_reference("remove", project_to_remove_from, reference_choice)
-			end)
-		end)
+		dotnet_jobs.handle_project_reference("remove", project_to_remove_from, reference_choice)
 	end)
 end
 
 -- Add a project to the solution
 function M.add_project_to_solution()
-	solution.resolve(function(sln)
+	async.run(function()
+		local sln = resolve_solution()
 		if not sln then
 			return
 		end
@@ -340,14 +323,13 @@ function M.add_project_to_solution()
 			return
 		end
 
-		picker.ask_user_for_choice("Add", projects_not_in_solution, function(choice)
-			if not choice then
-				vim.notify("No project chosen", vim.log.levels.ERROR)
-				return
-			end
+		local choice = ask_choice("Add", projects_not_in_solution)
+		if not choice then
+			vim.notify("No project chosen", vim.log.levels.ERROR)
+			return
+		end
 
-			dotnet_jobs.add_project_to_solution(sln, choice)
-		end)
+		dotnet_jobs.add_project_to_solution(sln, choice)
 	end)
 end
 
