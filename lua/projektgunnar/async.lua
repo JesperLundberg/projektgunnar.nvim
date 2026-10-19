@@ -4,7 +4,10 @@
 local M = {}
 local unpack = unpack or table.unpack
 
--- Safely resume a coroutine on the main loop (avoids "yield across C boundary")
+-- Safely resume a coroutine on the main loop (avoids "yield across C boundary").
+-- Protocol: if the coroutine yields a function, it's treated as an
+-- awaitable thunk — call it with a `resume` callback, and resume the
+-- coroutine with whatever args that callback receives.
 local function resume_on_main(co, ...)
 	local args = { ... } -- capture varargs in this scope
 	vim.schedule(function()
@@ -14,7 +17,6 @@ local function resume_on_main(co, ...)
 			return
 		end
 		if type(ret) == "function" then
-			-- The coroutine yielded a thunk; call it with a resume callback
 			ret(function(...)
 				resume_on_main(co, ...)
 			end)
@@ -55,30 +57,32 @@ function M.system(cmd, opts)
 	end)()
 end
 
+-- Run `fn` safely on the main loop and report errors via vim.notify.
+-- If called from inside a coroutine (started by M.run), this becomes
+-- awaitable: the coroutine suspends until `fn` has run.
+-- If called outside a coroutine, it just schedules `fn` and returns immediately.
 function M.ui(fn, ...)
 	local args = { ... }
 
-	local function run()
-		local ok, err = xpcall(function()
-			return fn(unpack(args))
-		end, function(e)
+	local function run_safely()
+		local ok, err = xpcall(fn, function(e)
 			return debug.traceback("UI error: " .. tostring(e), 2)
-		end)
+		end, unpack(args))
 		if not ok then
 			vim.notify(err, vim.log.levels.ERROR)
 		end
 	end
 
-	-- Not inside a coroutine: cannot yield; just schedule and return.
 	if coroutine.running() == nil then
-		vim.schedule(run)
+		vim.schedule(run_safely)
 		return
 	end
 
-	-- Inside coroutine: make it awaitable by yielding a thunk.
+	-- Reuse the same await mechanism as M.system: yield a thunk that
+	-- schedules the work and resumes us once it's done.
 	return M.wrap_cb(function(cb)
 		vim.schedule(function()
-			run()
+			run_safely()
 			cb()
 		end)
 	end)()

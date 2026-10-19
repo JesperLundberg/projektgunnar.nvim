@@ -47,10 +47,25 @@ describe("main", function()
 			fn()
 		end)
 
-		-- Make async.run synchronous for all tests.
+		-- Make async.run synchronous for all tests by replicating async.lua's
+		-- resume_on_main protocol: if the coroutine yields a thunk, call it
+		-- immediately and resume with whatever it passes back.
+		local function resume(co, ...)
+			local ok, ret = coroutine.resume(co, ...)
+			if not ok then
+				error(ret)
+			end
+			if type(ret) == "function" then
+				ret(function(...)
+					resume(co, ...)
+				end)
+			end
+		end
+
 		async_run_stub = stub(async_, "run")
-		async_run_stub.invokes(function(fn)
-			fn()
+		async_run_stub.invokes(function(fn, ...)
+			local co = coroutine.create(fn)
+			resume(co, ...)
 		end)
 
 		-- Always resolve a fake solution unless a test overrides it.
