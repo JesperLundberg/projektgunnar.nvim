@@ -16,7 +16,7 @@ local function find_files_under(dir, patterns, limit)
 
 		for _, file in ipairs(files_found) do
 			-- only add unique
-			if not M.has_value(matches) then
+			if not M.has_value(matches, file) then
 				table.insert(matches, file)
 			end
 		end
@@ -105,14 +105,19 @@ end
 --- @return table
 function M.get_all_project_files()
 	-- find all csproj files in the solution folders
-	local output = vim.fn.systemlist({ "find", ".", "-name", "*.csproj" })
+	-- Search from cwd and return absolute, normalized paths so they can be
+	-- compared with get_all_projects_in_solution()
+	local cwd = vim.fn.getcwd()
+	local output = vim.fn.systemlist({ "find", cwd, "-name", "*.csproj" })
 
-	-- remove the first two characters of each line as that is a dot and a slash
-	for i, v in ipairs(output) do
-		output[i] = string.sub(v, 3)
+	local result = {}
+	for _, v in ipairs(output) do
+		if v ~= "" then
+			table.insert(result, vim.fs.normalize(v))
+		end
 	end
 
-	return output
+	return result
 end
 
 --- find out if table has the provided value

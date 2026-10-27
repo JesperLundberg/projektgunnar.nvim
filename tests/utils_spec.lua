@@ -216,16 +216,17 @@ describe("utils", function()
 			end
 		end)
 
-		it("should return all csproj files with leading './' removed", function()
+		it("should return all csproj files as absolute paths", function()
+			local cwd = vim.fn.getcwd()
 			systemlist_stub.returns({
-				"./a.csproj",
-				"./folder/b.csproj",
+				cwd .. "/a.csproj",
+				cwd .. "/folder/b.csproj",
 			})
 
 			local result = utils.get_all_project_files()
 
-			assert.are.same({ "a.csproj", "folder/b.csproj" }, result)
-			assert.stub(systemlist_stub).was_called_with({ "find", ".", "-name", "*.csproj" })
+			assert.are.same({ cwd .. "/a.csproj", cwd .. "/folder/b.csproj" }, result)
+			assert.stub(systemlist_stub).was_called_with({ "find", cwd, "-name", "*.csproj" })
 		end)
 	end)
 end)

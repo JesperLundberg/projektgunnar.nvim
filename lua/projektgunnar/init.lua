@@ -28,16 +28,15 @@ local commands = {
 	end,
 }
 
-local function tab_completion(_, _, _)
-	-- Tab completion for ProjektGunnar
-	local tab_commands = {}
+local function tab_completion(arg_lead, _, _)
+	-- Tab completion for ProjektGunnar: sorted and filtered by what is typed
+	local keys = vim.tbl_keys(commands)
+	table.sort(keys)
 
-	-- Loop through the commands and add the key value to the tab completion
-	for k, _ in pairs(commands) do
-		table.insert(tab_commands, k)
-	end
-
-	return tab_commands
+	local lead = (arg_lead or ""):lower()
+	return vim.tbl_filter(function(k)
+		return vim.startswith(k:lower(), lead)
+	end, keys)
 end
 
 vim.api.nvim_create_user_command("ProjektGunnar", function(opts)
@@ -67,7 +66,7 @@ vim.api.nvim_create_user_command("ProjektGunnar", function(opts)
 		end
 		fn()
 	end
-end, { nargs = "*", complete = tab_completion, desc = "ProjektGunnar plugin" })
+end, { nargs = "?", complete = tab_completion, desc = "ProjektGunnar plugin" })
 
 function M.setup(opts)
 	-- Setup the plugin

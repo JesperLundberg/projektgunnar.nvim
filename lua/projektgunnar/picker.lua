@@ -53,6 +53,18 @@ local function pick_telescope_async(prompt, items, cb)
 	local conf = confmod.values
 	local sorter = type(conf.generic_sorter) == "function" and conf.generic_sorter({}) or nil
 
+	-- Guarantee the callback fires exactly once, however the picker is closed
+	local done = false
+	local function finish(val)
+		if done then
+			return
+		end
+		done = true
+		vim.schedule(function()
+			cb(val)
+		end)
+	end
+
 	local picker = pickers.new({}, {
 		prompt_title = prompt or "Select",
 		finder = finders.new_table({
@@ -66,22 +78,28 @@ local function pick_telescope_async(prompt, items, cb)
 			local function choose()
 				local sel = state.get_selected_entry()
 				local val = sel and (sel.value or sel[1]) or nil
+				finish(val)
 				actions.close(bufnr)
-				vim.schedule(function()
-					cb(val)
-				end)
 			end
 			local function cancel()
+				finish(nil)
 				actions.close(bufnr)
-				vim.schedule(function()
-					cb(nil)
-				end)
 			end
 			map("i", "<CR>", choose)
 			map("n", "<CR>", choose)
 			map("i", "<C-c>", cancel)
 			map("n", "<Esc>", cancel)
 			map("n", "q", cancel)
+
+			-- Closed any other way (:q, focus loss, <C-q>, ...): treat as cancel.
+			-- If choose/cancel already ran, finish() is a no-op.
+			vim.api.nvim_create_autocmd("BufWipeout", {
+				buffer = bufnr,
+				once = true,
+				callback = function()
+					finish(nil)
+				end,
+			})
 			return true
 		end,
 	})

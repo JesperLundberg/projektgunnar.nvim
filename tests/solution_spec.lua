@@ -10,6 +10,7 @@ describe("solution", function()
 	local notify_stub
 	local getcwd_stub
 	local realpath_stub
+	local fs_stat_stub
 	local utils_get_all_solution_files_stub
 	local picker_ask_user_for_choice_stub
 
@@ -27,6 +28,8 @@ describe("solution", function()
 		notify_stub = stub(vim, "notify")
 		getcwd_stub = stub(vim.fn, "getcwd")
 		realpath_stub = stub(vim.uv, "fs_realpath")
+		fs_stat_stub = stub(vim.uv, "fs_stat")
+		fs_stat_stub.returns({ type = "file" })
 
 		-- Deterministic cwd/realpath for stable cache keys and relative paths.
 		getcwd_stub.returns("/repo")
@@ -49,6 +52,9 @@ describe("solution", function()
 		end
 		if realpath_stub then
 			realpath_stub:revert()
+		end
+		if fs_stat_stub then
+			fs_stat_stub:revert()
 		end
 		if utils_get_all_solution_files_stub then
 			utils_get_all_solution_files_stub:revert()
@@ -104,6 +110,16 @@ describe("solution", function()
 			solution.resolve(function(_) end)
 
 			assert.stub(utils_get_all_solution_files_stub).was_called(1)
+		end)
+
+		it("should re-scan when the cached solution file no longer exists", function()
+			utils_get_all_solution_files_stub.returns({ "/repo/a.sln" })
+
+			solution.resolve(function(_) end)
+			fs_stat_stub.returns(nil)
+			solution.resolve(function(_) end)
+
+			assert.stub(utils_get_all_solution_files_stub).was_called(2)
 		end)
 
 		it("should call picker when multiple solutions exist", function()
