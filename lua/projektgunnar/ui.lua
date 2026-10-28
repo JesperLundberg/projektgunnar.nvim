@@ -41,8 +41,17 @@ local function center_line(s)
 	return string.rep(" ", pad) .. s
 end
 
---- Temporarily set modifiable, run fn, then restore original state
+--- True if buf is a valid buffer (the user may have closed the window, which wipes it)
+local function buf_valid(buf)
+	return type(buf) == "number" and api.nvim_buf_is_valid(buf)
+end
+
+--- Temporarily set modifiable, run fn, then restore original state.
+--- Silently does nothing if the buffer has been wiped.
 local function with_modifiable(buf, fn)
+	if not buf_valid(buf) then
+		return
+	end
 	local prev = vim.bo[buf].modifiable
 	vim.bo[buf].modifiable = true
 	local ok, err = pcall(fn)
@@ -169,6 +178,11 @@ end
 
 ---@diagnostic disable: need-check-nil
 local function spinner_start(buf, interval_ms)
+	-- Nothing to draw on if the window was closed
+	if not buf_valid(buf) then
+		return
+	end
+
 	-- If a spinner is already running for this buffer, do nothing
 	if spinners[buf] and spinners[buf].timer then
 		return
@@ -380,13 +394,13 @@ function M.result.print(buf, msg)
 	set_lines(buf, RESULT_HEADER_LINES, { msg, "----------------------------------------" })
 end
 
---- Append a progress line ("Updating project X of Y")
+--- Append a progress line ("Project X out of Y")
 --- @param buf integer
 --- @param index integer
 --- @param total integer
 function M.result.progress(buf, index, total)
 	append_lines(buf, {
-		"Updating project " .. tostring(index) .. " out of " .. tostring(total),
+		"Project " .. tostring(index) .. " out of " .. tostring(total),
 		"----------------------------------------",
 	})
 end
@@ -398,16 +412,26 @@ end
 --- @param success boolean
 --- @param cmd string
 --- @param package string
-function M.result.update(buf, index, total, success, cmd, package)
+--- @param output? string[] output of the command; only shown when it failed
+function M.result.update(buf, index, total, success, cmd, package, output)
 	local status_symbol = success and "" or ""
 	local status_message = success and "Success" or "Failed"
-	append_lines(buf, {
+	local lines = {
 		tostring(index) .. " out of " .. tostring(total),
 		"Status: " .. status_message .. " " .. status_symbol,
 		"Package: " .. package,
 		"Command: " .. cmd,
-		"----------------------------------------",
-	})
+	}
+
+	if not success and output and #output > 0 then
+		table.insert(lines, "Output:")
+		for _, l in ipairs(output) do
+			table.insert(lines, "  " .. l)
+		end
+	end
+
+	table.insert(lines, "----------------------------------------")
+	append_lines(buf, lines)
 end
 
 --- Start the spinner (allocates a dedicated line below current content)

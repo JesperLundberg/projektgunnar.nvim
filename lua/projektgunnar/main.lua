@@ -61,7 +61,7 @@ function M.add_nuget_to_project()
 			},
 		}
 
-		dotnet_jobs.handle_nugets_in_project("Add", command_and_nuget_to_add)
+		dotnet_jobs.handle_nugets_in_project("Add", command_and_nuget_to_add, "project")
 	end)
 end
 
@@ -113,7 +113,7 @@ function M.remove_nuget_from_project()
 			},
 		}
 
-		dotnet_jobs.handle_nugets_in_project("Remove", command_and_nuget_to_remove)
+		dotnet_jobs.handle_nugets_in_project("Remove", command_and_nuget_to_remove, "project")
 	end)
 end
 
@@ -161,7 +161,7 @@ function M.update_nugets_in_project()
 			},
 		}
 
-		dotnet_jobs.handle_nugets_in_project("Update", command_and_nugets)
+		dotnet_jobs.handle_nugets_in_project("Update", command_and_nugets, "project")
 	end)
 end
 
@@ -205,7 +205,7 @@ function M.update_nugets_in_solution()
 			return
 		end
 
-		dotnet_jobs.handle_nugets_in_project("Update", all_projects_and_nugets)
+		dotnet_jobs.handle_nugets_in_project("Update", all_projects_and_nugets, "solution")
 	end)
 end
 

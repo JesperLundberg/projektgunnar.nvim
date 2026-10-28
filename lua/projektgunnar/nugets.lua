@@ -32,6 +32,9 @@ end
 --- @return string[]  -- never nil
 local function parse_packages(stdout)
 	local pkgs = {}
+	-- A package is listed once per target framework in multi-targeted
+	-- projects, so keep only the first occurrence of each id (order preserved).
+	local seen = {}
 	if type(stdout) ~= "string" or stdout == "" then
 		return pkgs
 	end
@@ -39,7 +42,8 @@ local function parse_packages(stdout)
 		-- dotnet marks package rows with '>' (works across SDK versions/locales)
 		if line:find(">", 1, true) then
 			local name = line:match("^%s*>%s*(%S+)")
-			if name and name ~= ">" then
+			if name and name ~= ">" and not seen[name] then
+				seen[name] = true
 				table.insert(pkgs, name)
 			end
 		end

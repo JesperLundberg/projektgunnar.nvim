@@ -260,6 +260,19 @@ describe("async", function()
 			assert.are.equal("/tmp", opts.cwd)
 		end)
 
+		it("should report a spawn failure as exit code -1 instead of raising", function()
+			system_stub.invokes(function()
+				error("ENOENT: no such file or directory: dotnet")
+			end)
+
+			local got = run_system({ "dotnet" })
+
+			assert.are.same({}, got[1])
+			assert.is_truthy(got[2]:find("ENOENT", 1, true))
+			assert.are.equal(-1, got[3])
+			assert.stub(notify_stub).was_not_called()
+		end)
+
 		it("should report a non-zero exit code", function()
 			system_stub.invokes(function(_, _, on_exit)
 				on_exit({ stdout = "", stderr = "bad", code = 3 })

@@ -112,7 +112,22 @@ describe("utils", function()
 			local result = utils.get_nuget_config_file()
 			assert.are.equal("/repo/nuget.config", result)
 
-			assert.stub(glob_stub).was_called_with("/repo/**/nuget.config", false, true)
+			assert.stub(glob_stub).was_called_with("/repo/**/[Nn]u[Gg]et.[Cc]onfig", false, true)
+		end)
+
+		it("should find NuGet.Config regardless of casing", function()
+			-- Real glob against a temp dir (getcwd stays stubbed to point at it)
+			glob_stub:revert()
+
+			local dir = vim.fn.tempname()
+			vim.fn.mkdir(dir .. "/sub", "p")
+			vim.fn.writefile({ "<configuration/>" }, dir .. "/sub/NuGet.Config")
+			getcwd_stub.returns(dir)
+
+			local result = utils.get_nuget_config_file()
+			vim.fn.delete(dir, "rf")
+
+			assert.are.equal(dir .. "/sub/NuGet.Config", result)
 		end)
 
 		it("should return nil when no nuget.config exists", function()

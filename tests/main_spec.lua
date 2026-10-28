@@ -193,7 +193,7 @@ describe("main", function()
 					argv = { "dotnet", "remove", "proj1", "package" },
 					items = { "Moq" },
 				},
-			})
+			}, "project")
 		end)
 	end)
 
@@ -229,7 +229,28 @@ describe("main", function()
 					argv = { "dotnet", "add", "proj1", "package" },
 					items = { "Moq", "NUnit" },
 				},
-			})
+			}, "project")
+		end)
+	end)
+
+	describe("update_nugets_in_solution", function()
+		it("should call handle_nugets_in_project with solution scope even for a single project", function()
+			utils_get_all_projects_in_solution_stub.returns({ "proj1", "proj2" })
+			nugets_outdated_nugets_stub.invokes(function(project)
+				if project == "proj1" then
+					return { "Moq" }, nil
+				end
+				return {}, nil
+			end)
+
+			sut.update_nugets_in_solution()
+
+			assert.stub(dotnet_handle_nugets_in_project_stub).was_called_with("Update", {
+				{
+					argv = { "dotnet", "add", "proj1", "package" },
+					items = { "Moq" },
+				},
+			}, "solution")
 		end)
 	end)
 

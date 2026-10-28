@@ -56,7 +56,9 @@ function M.get_nuget_config_file()
 	-- get the current working directory
 	local cwd = vim.fn.getcwd()
 
-	local file = find_files_under(cwd, { "nuget.config" }, 1)
+	-- NuGet accepts nuget.config, NuGet.Config, NuGet.config... and file systems
+	-- like Linux are case sensitive, so match every casing with one glob.
+	local file = find_files_under(cwd, { "[Nn]u[Gg]et.[Cc]onfig" }, 1)
 
 	-- return the config file path
 	return file[1] -- return the first element of the table
