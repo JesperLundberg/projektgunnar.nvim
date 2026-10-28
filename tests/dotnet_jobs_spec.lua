@@ -91,16 +91,17 @@ describe("dotnet_jobs", function()
 			assert.stub(stubs.print).was_called_with(buf, "Remove nugets in project")
 		end)
 
-		it("should not show project progress when there is only one command", function()
+		it("should show the project name when there is only one command", function()
 			dotnet_jobs.handle_nugets_in_project("Add", {
-				{ argv = { "dotnet", "add", "p.csproj", "package" }, items = { "Foo" } },
+				{ argv = { "dotnet", "add", "src/p.csproj", "package" }, items = { "Foo" } },
 			}, "project")
 
 			assert.is_true(wait_finished())
-			assert.stub(stubs.progress).was_not_called()
+			assert.stub(stubs.progress).was_called(1)
+			assert.stub(stubs.progress).was_called_with(buf, 1, 1, "p")
 		end)
 
-		it("should show project progress when there are several commands", function()
+		it("should show project progress with names when there are several commands", function()
 			dotnet_jobs.handle_nugets_in_project("Update", {
 				{ argv = { "dotnet", "add", "a.csproj", "package" }, items = { "Foo" } },
 				{ argv = { "dotnet", "add", "b.csproj", "package" }, items = { "Bar" } },
@@ -108,8 +109,8 @@ describe("dotnet_jobs", function()
 
 			assert.is_true(wait_finished())
 			assert.stub(stubs.progress).was_called(2)
-			assert.stub(stubs.progress).was_called_with(buf, 1, 2)
-			assert.stub(stubs.progress).was_called_with(buf, 2, 2)
+			assert.stub(stubs.progress).was_called_with(buf, 1, 2, "a")
+			assert.stub(stubs.progress).was_called_with(buf, 2, 2, "b")
 			assert.stub(system_stub).was_called(2)
 		end)
 

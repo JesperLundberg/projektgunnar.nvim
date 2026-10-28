@@ -103,10 +103,16 @@ describe("ui.result", function()
 	end)
 
 	describe("progress", function()
-		it("should say which project is being processed", function()
-			ui.result.progress(buf, 2, 5)
+		it("should say which project is being processed when there are several", function()
+			ui.result.progress(buf, 2, 5, "Api")
 
-			assert.is_true(has_line("Project 2 out of 5"))
+			assert.is_true(has_line("Project 2 out of 5: Api"))
+		end)
+
+		it("should only show the project name when there is one project", function()
+			ui.result.progress(buf, 1, 1, "Api")
+
+			assert.is_true(has_line("Project: Api"))
 		end)
 	end)
 

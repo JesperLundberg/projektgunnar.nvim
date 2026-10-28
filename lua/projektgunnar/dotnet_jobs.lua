@@ -86,10 +86,10 @@ local function run_queue(buf, command_and_items, intro)
 		end
 
 		for ci, entry in ipairs(command_and_items) do
-			-- Only show which project we are at when there is more than one
-			if total_commands > 1 then
-				ui_call(ui.result.progress, ci, total_commands)
-			end
+			-- Show which project this entry targets (the path is the third argv: dotnet <verb> <path> ...)
+			local target = entry.argv and entry.argv[3]
+			local name = target and vim.fn.fnamemodify(target, ":t:r") or nil
+			ui_call(ui.result.progress, ci, total_commands, name)
 
 			local base_command = entry.argv or {}
 			local items = entry.items or {}

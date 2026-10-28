@@ -424,15 +424,14 @@ function M.result.print(buf, msg)
 	set_lines(buf, RESULT_HEADER_LINES, { msg, "----------------------------------------" })
 end
 
---- Append a progress line ("Project X out of Y")
+--- Append a project header line: "Project X out of Y: Name" (or "Project: Name" when only one)
 --- @param buf integer
 --- @param index integer
 --- @param total integer
-function M.result.progress(buf, index, total)
-	append_lines(buf, {
-		"Project " .. tostring(index) .. " out of " .. tostring(total),
-		"----------------------------------------",
-	})
+--- @param name? string project name
+function M.result.progress(buf, index, total, name)
+	local label = total > 1 and ("Project " .. index .. " out of " .. total) or "Project"
+	append_lines(buf, { name and name ~= "" and (label .. ": " .. name) or label })
 end
 
 local ICON_SUCCESS = vim.fn.nr2char(0xf058)
