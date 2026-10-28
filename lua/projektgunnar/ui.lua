@@ -69,6 +69,10 @@ local function with_modifiable(buf, fn)
 	end
 end
 
+local hl_ns = api.nvim_create_namespace("projektgunnar_result")
+api.nvim_set_hl(0, "ProjektGunnarSuccess", { link = "DiagnosticOk", default = true })
+api.nvim_set_hl(0, "ProjektGunnarFailure", { link = "DiagnosticError", default = true })
+
 --- Replace buffer lines from start_idx to end (-1) with given lines
 local function set_lines(buf, start_idx, lines)
 	with_modifiable(buf, function()
@@ -440,7 +444,19 @@ function M.result.update(buf, index, total, success, cmd, package, output)
 	end
 
 	table.insert(lines, "----------------------------------------")
+	if not buf_valid(buf) then
+		return
+	end
+	local start = api.nvim_buf_line_count(buf)
 	append_lines(buf, lines)
+
+	-- Highlight the whole status line (line 2 of the block): green on success, red on failure
+	pcall(api.nvim_buf_set_extmark, buf, hl_ns, start + 1, 0, {
+		end_row = start + 2,
+		end_col = 0,
+		hl_group = success and "ProjektGunnarSuccess" or "ProjektGunnarFailure",
+		hl_eol = true,
+	})
 end
 
 --- Start the spinner (allocates a dedicated line below current content)
