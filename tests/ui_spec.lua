@@ -43,7 +43,7 @@ describe("ui.result", function()
 		end
 
 		it("should show a failed command collapsed with its output hidden", function()
-			ui.result.update(buf, 1, 1, false, "dotnet add p package Foo", "Foo", { "error: boom", "second" })
+			ui.result.update(buf, false, "dotnet add p package Foo", "Foo", { "error: boom", "second" })
 
 			assert.is_true(has_line("▸ Foo", true))
 			assert.is_false(has_line("    error: boom"))
@@ -51,7 +51,7 @@ describe("ui.result", function()
 		end)
 
 		it("should expand and collapse the output of a failed command", function()
-			ui.result.update(buf, 1, 1, false, "dotnet add p package Foo", "Foo", { "error: boom", "second" })
+			ui.result.update(buf, false, "dotnet add p package Foo", "Foo", { "error: boom", "second" })
 			cursor_to("Foo")
 
 			ui.result.toggle(buf, vim.api.nvim_get_current_win())
@@ -66,7 +66,7 @@ describe("ui.result", function()
 		end)
 
 		it("should not be expandable for a failed command without output", function()
-			ui.result.update(buf, 1, 1, false, "dotnet add p package Foo", "Foo", {})
+			ui.result.update(buf, false, "dotnet add p package Foo", "Foo", {})
 			cursor_to("Foo")
 			local before = lines()
 
@@ -77,7 +77,7 @@ describe("ui.result", function()
 		end)
 
 		it("should not be expandable for a successful command", function()
-			ui.result.update(buf, 1, 1, true, "dotnet add p package Foo", "Foo", { "ignored" })
+			ui.result.update(buf, true, "dotnet add p package Foo", "Foo", { "ignored" })
 			cursor_to("Foo")
 			local before = lines()
 
@@ -88,8 +88,8 @@ describe("ui.result", function()
 		end)
 
 		it("should keep following the right line after expanding an earlier block", function()
-			ui.result.update(buf, 1, 2, false, "cmd1", "Foo", { "boom" })
-			ui.result.update(buf, 2, 2, false, "cmd2", "Bar", { "bang" })
+			ui.result.update(buf, false, "cmd1", "Foo", { "boom" })
+			ui.result.update(buf, false, "cmd2", "Bar", { "bang" })
 			cursor_to("Foo")
 
 			ui.result.toggle(buf, vim.api.nvim_get_current_win())
@@ -123,7 +123,7 @@ describe("ui.result", function()
 			assert.has_no.errors(function()
 				ui.result.print(buf, "hello")
 				ui.result.progress(buf, 1, 2)
-				ui.result.update(buf, 1, 1, false, "cmd", "pkg", { "x" })
+				ui.result.update(buf, false, "cmd", "pkg", { "x" })
 				ui.result.spinner(buf)
 				ui.result.clear_spinner(buf)
 				ui.result.done(buf)

@@ -93,9 +93,8 @@ local function run_queue(buf, command_and_items, intro)
 
 			local base_command = entry.argv or {}
 			local items = entry.items or {}
-			local total_items = #items
 
-			for ii, item in ipairs(items) do
+			for _, item in ipairs(items) do
 				-- Build argv per item: copy base and append item
 				local argv = vim.deepcopy(base_command)
 				table.insert(argv, item)
@@ -125,7 +124,7 @@ local function run_queue(buf, command_and_items, intro)
 				if not success then
 					output = tail_output(stdout_lines, stderr)
 				end
-				ui_call(ui.result.update, ii, total_items, success, argsToPrint, item, output)
+				ui_call(ui.result.update, success, argsToPrint, item, output)
 			end
 		end
 

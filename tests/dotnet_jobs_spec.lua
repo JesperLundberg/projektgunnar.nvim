@@ -122,8 +122,8 @@ describe("dotnet_jobs", function()
 			assert.is_true(wait_finished())
 
 			local a = args(stubs.update, 1)
-			assert.are.same({ buf, 1, 1, true, "dotnet add p.csproj package Foo", "Foo" }, vim.list_slice(a, 1, 6))
-			assert.is_nil(a[7])
+			assert.are.same({ buf, true, "dotnet add p.csproj package Foo", "Foo" }, vim.list_slice(a, 1, 4))
+			assert.is_nil(a[5])
 		end)
 
 		it("should start and stop the spinner around every command", function()
@@ -148,8 +148,8 @@ describe("dotnet_jobs", function()
 			assert.is_true(wait_finished())
 
 			local a = args(stubs.update, 1)
-			assert.is_false(a[4])
-			assert.are.same({ "error: NU1101", "Unable to find package Foo", "stderr line" }, a[7])
+			assert.is_false(a[2])
+			assert.are.same({ "error: NU1101", "Unable to find package Foo", "stderr line" }, a[5])
 		end)
 
 		it("should drop empty lines and carriage returns from the output", function()
@@ -160,7 +160,7 @@ describe("dotnet_jobs", function()
 			}, "project")
 
 			assert.is_true(wait_finished())
-			assert.are.same({ "error: bad" }, args(stubs.update, 1)[7])
+			assert.are.same({ "error: bad" }, args(stubs.update, 1)[5])
 		end)
 
 		it("should only keep the last 10 lines of output", function()
@@ -176,7 +176,7 @@ describe("dotnet_jobs", function()
 
 			assert.is_true(wait_finished())
 
-			local output = args(stubs.update, 1)[7]
+			local output = args(stubs.update, 1)[5]
 			assert.are.equal(10, #output)
 			assert.are.equal("line 6", output[1])
 			assert.are.equal("line 15", output[10])
@@ -198,8 +198,8 @@ describe("dotnet_jobs", function()
 
 			assert.is_true(wait_finished())
 			assert.stub(system_stub).was_called(2)
-			assert.is_false(args(stubs.update, 1)[4])
-			assert.is_true(args(stubs.update, 2)[4])
+			assert.is_false(args(stubs.update, 1)[2])
+			assert.is_true(args(stubs.update, 2)[2])
 		end)
 	end)
 

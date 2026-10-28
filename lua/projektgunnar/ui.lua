@@ -443,13 +443,11 @@ local ARROW_EXPANDED = "▾"
 --- Failed items with output get an arrow and can be expanded with <CR> to show the command and
 --- the last lines of output. Everything starts collapsed.
 --- @param buf integer
---- @param index integer unused, kept for API compatibility
---- @param total integer unused, kept for API compatibility
 --- @param success boolean
 --- @param cmd string
 --- @param package string
 --- @param output? string[] output of the command; only available (expandable) when it failed
-function M.result.update(buf, index, total, success, cmd, package, output)
+function M.result.update(buf, success, cmd, package, output)
 	if not buf_valid(buf) then
 		return
 	end
