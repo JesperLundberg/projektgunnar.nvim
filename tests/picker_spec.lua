@@ -107,10 +107,9 @@ describe("picker", function()
 				return cb.calls > 0
 			end))
 			assert.is_nil(cb.value)
-			assert.stub(notify_stub).was_called_with(
-				"No picker backend available (snacks.nvim / telescope.nvim / mini.pick)",
-				vim.log.levels.ERROR
-			)
+			assert
+				.stub(notify_stub)
+				.was_called_with("No picker backend available (snacks.nvim / telescope.nvim / mini.pick)", vim.log.levels.ERROR)
 		end)
 
 		it("should follow the configured preference order", function()
@@ -277,10 +276,9 @@ describe("picker", function()
 				return cb.calls > 0
 			end))
 			assert.is_nil(cb.value)
-			assert.stub(notify_stub).was_called_with(
-				"No picker backend available (snacks.nvim / telescope.nvim / mini.pick)",
-				vim.log.levels.ERROR
-			)
+			assert
+				.stub(notify_stub)
+				.was_called_with("No picker backend available (snacks.nvim / telescope.nvim / mini.pick)", vim.log.levels.ERROR)
 		end)
 	end)
 
