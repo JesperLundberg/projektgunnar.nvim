@@ -33,36 +33,72 @@ describe("ui.result", function()
 	end)
 
 	describe("update", function()
-		it("should show the output of a failed command", function()
+		local function cursor_to(text)
+			for i, l in ipairs(lines()) do
+				if l:find(text, 1, true) then
+					vim.api.nvim_win_set_cursor(0, { i, 0 })
+					return
+				end
+			end
+		end
+
+		it("should show a failed command collapsed with its output hidden", function()
 			ui.result.update(buf, 1, 1, false, "dotnet add p package Foo", "Foo", { "error: boom", "second" })
 
-			assert.is_true(has_line("Status: Failed", true))
-			assert.is_true(has_line("Output:"))
-			assert.is_true(has_line("  error: boom"))
-			assert.is_true(has_line("  second"))
+			assert.is_true(has_line("▸ Foo", true))
+			assert.is_false(has_line("    error: boom"))
+			assert.is_false(has_line("    Command: dotnet add p package Foo"))
 		end)
 
-		it("should not show an output section for a failed command without output", function()
+		it("should expand and collapse the output of a failed command", function()
+			ui.result.update(buf, 1, 1, false, "dotnet add p package Foo", "Foo", { "error: boom", "second" })
+			cursor_to("Foo")
+
+			ui.result.toggle(buf, vim.api.nvim_get_current_win())
+			assert.is_true(has_line("▾ Foo", true))
+			assert.is_true(has_line("    Command: dotnet add p package Foo"))
+			assert.is_true(has_line("    error: boom"))
+			assert.is_true(has_line("    second"))
+
+			ui.result.toggle(buf, vim.api.nvim_get_current_win())
+			assert.is_true(has_line("▸ Foo", true))
+			assert.is_false(has_line("    error: boom"))
+		end)
+
+		it("should not be expandable for a failed command without output", function()
 			ui.result.update(buf, 1, 1, false, "dotnet add p package Foo", "Foo", {})
+			cursor_to("Foo")
+			local before = lines()
 
-			assert.is_true(has_line("Status: Failed", true))
-			assert.is_false(has_line("Output:"))
+			ui.result.toggle(buf, vim.api.nvim_get_current_win())
+
+			assert.is_false(has_line("▸ Foo", true))
+			assert.are.same(before, lines())
 		end)
 
-		it("should not show output for a successful command", function()
+		it("should not be expandable for a successful command", function()
 			ui.result.update(buf, 1, 1, true, "dotnet add p package Foo", "Foo", { "ignored" })
+			cursor_to("Foo")
+			local before = lines()
 
-			assert.is_true(has_line("Status: Success", true))
-			assert.is_false(has_line("Output:"))
-			assert.is_false(has_line("  ignored"))
+			ui.result.toggle(buf, vim.api.nvim_get_current_win())
+
+			assert.are.same(before, lines())
+			assert.is_false(has_line("    ignored"))
 		end)
 
-		it("should keep the package and command lines", function()
-			ui.result.update(buf, 2, 3, true, "dotnet add p package Foo", "Foo")
+		it("should keep following the right line after expanding an earlier block", function()
+			ui.result.update(buf, 1, 2, false, "cmd1", "Foo", { "boom" })
+			ui.result.update(buf, 2, 2, false, "cmd2", "Bar", { "bang" })
+			cursor_to("Foo")
 
-			assert.is_true(has_line("2 out of 3"))
-			assert.is_true(has_line("Package: Foo"))
-			assert.is_true(has_line("Command: dotnet add p package Foo"))
+			ui.result.toggle(buf, vim.api.nvim_get_current_win())
+			cursor_to("Bar")
+			ui.result.toggle(buf, vim.api.nvim_get_current_win())
+
+			assert.is_true(has_line("▾ Foo", true))
+			assert.is_true(has_line("▾ Bar", true))
+			assert.is_true(has_line("    bang"))
 		end)
 	end)
 
