@@ -18,7 +18,7 @@ describe("dotnet_jobs", function()
 	-- Wait until the queue is finished (either "done" was drawn or a summary notified)
 	local function wait_finished()
 		return wait_for(function()
-			return #ui.result.done.calls > 0 or #notify_stub.calls > 0
+			return #stubs.done.calls > 0 or #notify_stub.calls > 0
 		end)
 	end
 
@@ -121,7 +121,7 @@ describe("dotnet_jobs", function()
 			assert.is_true(wait_finished())
 
 			local a = args(stubs.update, 1)
-			assert.are.same({ buf, 1, 1, true, "dotnet add p.csproj package Foo", "Foo" }, { unpack(a, 1, 6) })
+			assert.are.same({ buf, 1, 1, true, "dotnet add p.csproj package Foo", "Foo" }, vim.list_slice(a, 1, 6))
 			assert.is_nil(a[7])
 		end)
 
@@ -236,7 +236,9 @@ describe("dotnet_jobs", function()
 			assert.stub(stubs.update).was_not_called()
 			assert.stub(stubs.done).was_not_called()
 			assert.stub(stubs.spinner).was_called(1) -- only before the window closed
-			assert.stub(notify_stub).was_called_with("ProjektGunnar: finished, 3 commands succeeded", vim.log.levels.INFO)
+			assert
+				.stub(notify_stub)
+				.was_called_with("ProjektGunnar: finished, 3 commands succeeded", vim.log.levels.INFO)
 		end)
 
 		it("should warn with the number of failures in the summary", function()
