@@ -50,10 +50,16 @@ end
 function M.system(cmd, opts)
 	opts = vim.tbl_extend("force", { text = true }, opts or {})
 	return M.wrap_cb(function(cb)
-		vim.system(cmd, opts, function(obj)
+		-- vim.system throws synchronously if the command cannot be spawned
+		-- (e.g. executable not found). Report that as a failed run instead of
+		-- crashing the coroutine, so callers can show the reason.
+		local ok, err = pcall(vim.system, cmd, opts, function(obj)
 			local lines = vim.split(obj.stdout or "", "\n", { trimempty = true })
 			cb(lines, obj.stderr or "", obj.code or -1)
 		end)
+		if not ok then
+			cb({}, tostring(err), -1)
+		end
 	end)()
 end
 

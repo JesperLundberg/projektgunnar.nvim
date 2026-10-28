@@ -18,8 +18,12 @@ function M.resolve(cb)
 	local key = table_key()
 
 	if cache[key] then
-		cb(cache[key])
-		return
+		if vim.uv.fs_stat(cache[key]) then
+			cb(cache[key])
+			return
+		end
+		-- cached file is gone (deleted/renamed), fall through and search again
+		cache[key] = nil
 	end
 
 	local solution_files = utils.get_all_solution_files()
@@ -60,8 +64,13 @@ end
 
 --- Forget cached solution file for current cwd.
 function M.forget_cached_solution_file()
-	vim.notify("Forgot cached solution file for current directory: " .. table_key(), vim.log.levels.INFO)
-	cache[table_key()] = nil
+	local key = table_key()
+	if cache[key] then
+		vim.notify("Forgot cached solution file for current directory: " .. key, vim.log.levels.INFO)
+		cache[key] = nil
+	else
+		vim.notify("No cached solution file for current directory: " .. key, vim.log.levels.INFO)
+	end
 end
 
 return M

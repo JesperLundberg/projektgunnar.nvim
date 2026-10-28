@@ -41,8 +41,17 @@ local function center_line(s)
 	return string.rep(" ", pad) .. s
 end
 
---- Temporarily set modifiable, run fn, then restore original state
+--- True if buf is a valid buffer (the user may have closed the window, which wipes it)
+local function buf_valid(buf)
+	return type(buf) == "number" and api.nvim_buf_is_valid(buf)
+end
+
+--- Temporarily set modifiable, run fn, then restore original state.
+--- Silently does nothing if the buffer has been wiped.
 local function with_modifiable(buf, fn)
+	if not buf_valid(buf) then
+		return
+	end
 	local prev = vim.bo[buf].modifiable
 	vim.bo[buf].modifiable = true
 	local ok, err = pcall(fn)
@@ -50,7 +59,19 @@ local function with_modifiable(buf, fn)
 	if not ok then
 		error(err)
 	end
+
+	-- Result windows always follow the bottom of the buffer
+	if vim.b[buf].projektgunnar_follow then
+		local last = api.nvim_buf_line_count(buf)
+		for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+			pcall(api.nvim_win_set_cursor, win, { last, 0 })
+		end
+	end
 end
+
+local hl_ns = api.nvim_create_namespace("projektgunnar_result")
+api.nvim_set_hl(0, "ProjektGunnarSuccess", { link = "DiagnosticOk", default = true })
+api.nvim_set_hl(0, "ProjektGunnarFailure", { link = "DiagnosticError", default = true })
 
 --- Replace buffer lines from start_idx to end (-1) with given lines
 local function set_lines(buf, start_idx, lines)
@@ -62,8 +83,8 @@ end
 --- Append lines to the end of the buffer
 local function append_lines(buf, lines)
 	with_modifiable(buf, function()
-		local curr = api.nvim_buf_get_lines(buf, 0, -1, false)
-		api.nvim_buf_set_lines(buf, 0, -1, false, vim.list_extend(curr, lines))
+		-- Start/end of -1 inserts at the end of the buffer, so existing lines are kept untouched
+		api.nvim_buf_set_lines(buf, -1, -1, false, lines)
 	end)
 end
 
@@ -169,6 +190,11 @@ end
 
 ---@diagnostic disable: need-check-nil
 local function spinner_start(buf, interval_ms)
+	-- Nothing to draw on if the window was closed
+	if not buf_valid(buf) then
+		return
+	end
+
 	-- If a spinner is already running for this buffer, do nothing
 	if spinners[buf] and spinners[buf].timer then
 		return
@@ -320,6 +346,10 @@ end
 -- Public API: Result window
 -- ======================
 
+-- Expandable failure blocks: blocks[buf][extmark_id] = { cmd, output, expanded, count }
+-- The extmark sits on the block's status line, so it follows the line as the buffer changes.
+local blocks = {}
+
 -- Number of header lines written at the top of the result buffer
 local RESULT_HEADER_LINES = 3
 
@@ -340,6 +370,7 @@ function M.result.open()
 	})
 
 	recenter_on_resize(win, c.width, c.height)
+	vim.b[buf].projektgunnar_follow = true
 
 	-- Header/help text (no duplicate title in buffer)
 	set_lines(buf, 0, {
@@ -356,6 +387,19 @@ function M.result.open()
 			pcall(api.nvim_win_close, win, true)
 		end
 	end, kmopts)
+
+	api.nvim_create_autocmd("BufWipeout", {
+		buffer = buf,
+		once = true,
+		callback = function()
+			blocks[buf] = nil
+		end,
+	})
+
+	-- Expand/collapse the failure details under the cursor
+	vim.keymap.set("n", "<CR>", function()
+		M.result.toggle(buf, win)
+	end, vim.tbl_extend("force", kmopts, { desc = "Expand/collapse result details" }))
 
 	-- Also close on BufLeave
 	api.nvim_create_autocmd("BufLeave", {
@@ -380,34 +424,107 @@ function M.result.print(buf, msg)
 	set_lines(buf, RESULT_HEADER_LINES, { msg, "----------------------------------------" })
 end
 
---- Append a progress line ("Updating project X of Y")
+--- Append a project header line: "Project X out of Y: Name" (or "Project: Name" when only one)
 --- @param buf integer
 --- @param index integer
 --- @param total integer
-function M.result.progress(buf, index, total)
-	append_lines(buf, {
-		"Updating project " .. tostring(index) .. " out of " .. tostring(total),
-		"----------------------------------------",
-	})
+--- @param name? string project name
+function M.result.progress(buf, index, total, name)
+	local label = total > 1 and ("Project " .. index .. " out of " .. total) or "Project"
+	append_lines(buf, { name and name ~= "" and (label .. ": " .. name) or label })
 end
 
---- Append a result block for one command (no highlights)
+local ICON_SUCCESS = vim.fn.nr2char(0xf058)
+local ICON_FAILURE = vim.fn.nr2char(0xf057)
+local ARROW_COLLAPSED = "▸"
+local ARROW_EXPANDED = "▾"
+
+--- Append one compact result line: "<arrow> <item> <icon>", green on success and red on failure.
+--- Failed items with output get an arrow and can be expanded with <CR> to show the command and
+--- the last lines of output. Everything starts collapsed.
 --- @param buf integer
---- @param index integer
---- @param total integer
 --- @param success boolean
 --- @param cmd string
 --- @param package string
-function M.result.update(buf, index, total, success, cmd, package)
-	local status_symbol = success and "" or ""
-	local status_message = success and "Success" or "Failed"
-	append_lines(buf, {
-		tostring(index) .. " out of " .. tostring(total),
-		"Status: " .. status_message .. " " .. status_symbol,
-		"Package: " .. package,
-		"Command: " .. cmd,
-		"----------------------------------------",
+--- @param output? string[] output of the command; only available (expandable) when it failed
+function M.result.update(buf, success, cmd, package, output)
+	if not buf_valid(buf) then
+		return
+	end
+
+	local expandable = not success and output ~= nil and #output > 0
+	local prefix = expandable and ARROW_COLLAPSED or " "
+	local icon = success and ICON_SUCCESS or ICON_FAILURE
+
+	local row = api.nvim_buf_line_count(buf)
+	append_lines(buf, { prefix .. " " .. package .. " " .. icon })
+
+	local id = api.nvim_buf_set_extmark(buf, hl_ns, row, 0, {
+		line_hl_group = success and "ProjektGunnarSuccess" or "ProjektGunnarFailure",
 	})
+
+	if expandable then
+		blocks[buf] = blocks[buf] or {}
+		blocks[buf][id] = { cmd = cmd, output = output, expanded = false, count = 0 }
+	end
+end
+
+--- Expand or collapse the failure block on the cursor line (no-op on other lines)
+--- @param buf integer
+--- @param win integer
+function M.result.toggle(buf, win)
+	if not buf_valid(buf) or not api.nvim_win_is_valid(win) or not blocks[buf] then
+		return
+	end
+
+	local row = api.nvim_win_get_cursor(win)[1] - 1
+	local block, id
+	for _, m in ipairs(api.nvim_buf_get_extmarks(buf, hl_ns, { row, 0 }, { row, 0 }, {})) do
+		if blocks[buf][m[1]] then
+			id, block = m[1], blocks[buf][m[1]]
+			break
+		end
+	end
+	if not block then
+		return
+	end
+
+	local old_arrow = block.expanded and ARROW_EXPANDED or ARROW_COLLAPSED
+	local new_arrow = block.expanded and ARROW_COLLAPSED or ARROW_EXPANDED
+	local delta
+	local hl = api.nvim_buf_get_extmark_by_id(buf, hl_ns, id, { details = true })[3].line_hl_group
+
+	-- Not using with_modifiable here: toggling must not move the cursor to the bottom
+	local prev = vim.bo[buf].modifiable
+	vim.bo[buf].modifiable = true
+	if block.expanded then
+		api.nvim_buf_set_lines(buf, row + 1, row + 1 + block.count, false, {})
+		delta = -block.count
+		block.count = 0
+	else
+		local details = { "    Command: " .. block.cmd }
+		for _, l in ipairs(block.output) do
+			table.insert(details, "    " .. l)
+		end
+		api.nvim_buf_set_lines(buf, row + 1, row + 1, false, details)
+		block.count = #details
+		delta = #details
+	end
+	api.nvim_buf_set_text(buf, row, 0, row, #old_arrow, { new_arrow })
+	vim.bo[buf].modifiable = prev
+	block.expanded = not block.expanded
+
+	-- Replacing text can drop the mark, so re-assert it with the same id
+	api.nvim_buf_set_extmark(buf, hl_ns, row, 0, { id = id, line_hl_group = hl })
+
+	-- Keep a running spinner line (below the block) pointing at the right row
+	local s = spinners[buf]
+	if s and s.line and s.line - 1 > row then
+		s.line = s.line + delta
+	end
+	if last_spinner_line[buf] and last_spinner_line[buf] - 1 > row then
+		last_spinner_line[buf] = last_spinner_line[buf] + delta
+	end
 end
 
 --- Start the spinner (allocates a dedicated line below current content)
