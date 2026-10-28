@@ -59,6 +59,14 @@ local function with_modifiable(buf, fn)
 	if not ok then
 		error(err)
 	end
+
+	-- Result windows always follow the bottom of the buffer
+	if vim.b[buf].projektgunnar_follow then
+		local last = api.nvim_buf_line_count(buf)
+		for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+			pcall(api.nvim_win_set_cursor, win, { last, 0 })
+		end
+	end
 end
 
 --- Replace buffer lines from start_idx to end (-1) with given lines
@@ -71,8 +79,8 @@ end
 --- Append lines to the end of the buffer
 local function append_lines(buf, lines)
 	with_modifiable(buf, function()
-		local curr = api.nvim_buf_get_lines(buf, 0, -1, false)
-		api.nvim_buf_set_lines(buf, 0, -1, false, vim.list_extend(curr, lines))
+		-- Start/end of -1 inserts at the end of the buffer, so existing lines are kept untouched
+		api.nvim_buf_set_lines(buf, -1, -1, false, lines)
 	end)
 end
 
@@ -354,6 +362,7 @@ function M.result.open()
 	})
 
 	recenter_on_resize(win, c.width, c.height)
+	vim.b[buf].projektgunnar_follow = true
 
 	-- Header/help text (no duplicate title in buffer)
 	set_lines(buf, 0, {
